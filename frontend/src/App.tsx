@@ -3,6 +3,7 @@ import SignInPage from './pages/SignInPage';
 import SignUpPage from './pages/SignUpPage';
 import ChatAppPage from './pages/ChatAppPage';
 import {Toaster} from 'sonner';
+import ProtectedRoute from './components/auth/ProtectedRoute';
 function App() {
   return (
   <>
@@ -18,11 +19,12 @@ function App() {
           path='/signup'
           element={<SignUpPage/>}
         />
-
-        <Route
-          path='/chatApp'
-          element={<ChatAppPage/>}
-        />
+        <Route element={<ProtectedRoute/>}>
+          <Route
+            path='/'
+            element={<ChatAppPage/>}
+          />
+        </Route>
         {/* protected routes*/}
       </Routes>
     </BrowserRouter>

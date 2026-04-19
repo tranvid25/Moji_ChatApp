@@ -1,8 +1,10 @@
-import express from 'express';
-import { signIn, signUp } from '../controllers/authController.js';
-import { validate } from '../middlewares/validate.js';
-import { loginSchema, registerSchema } from '../validations/authValidation.js';
-const router=express.Router();
+import express from "express";
+import { refreshToken, signIn, signOut, signUp } from "../controllers/authController.js";
+import { validate } from "../middlewares/validate.js";
+import { loginSchema, registerSchema } from "../validations/authValidation.js";
+const router = express.Router();
 router.post("/signup", validate(registerSchema), signUp);
-router.post("/login",validate(loginSchema),signIn);
+router.post("/login", validate(loginSchema), signIn);
+router.post("/signout", signOut);
+router.post("/refresh", refreshToken);
 export default router;

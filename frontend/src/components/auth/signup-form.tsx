@@ -6,6 +6,9 @@ import { Button } from "../ui/button";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useAuthStore } from "@/stores/useAuthStores";
+import { useNavigate } from "react-router";
+import { toast } from "sonner";
 const signUpSchema = z.object({
   firstname: z.string().min(1, "Tên bắt buộc phải có"),
   lastname: z.string().min(1, "Họ bắt buộc phải có"),
@@ -18,6 +21,8 @@ export function SignupForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const { signUp } = useAuthStore();
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -25,7 +30,21 @@ export function SignupForm({
   } = useForm<SignUpFormValues>({
     resolver: zodResolver(signUpSchema),
   });
-  const onSubmit = async (data: SignUpFormValues) => {}; 
+  const onSubmit = async (data: SignUpFormValues) => {
+    try {
+      const { lastname, firstname, username, email, password } = data;
+
+      const response = await signUp(
+        lastname,
+        firstname,
+        username,
+        email,
+        password,
+      );
+    } catch (error: any) {
+      toast.error(error.message || "Đăng ký thất bại");
+    }
+  };
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0 border-border">

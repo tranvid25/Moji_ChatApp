@@ -6,8 +6,11 @@ import { Button } from "../ui/button";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useAuthStore } from "@/stores/useAuthStores";
+import { useNavigate } from "react-router";
+import { toast } from "sonner";
 const signInSchema = z.object({
-  email: z.email("Email không hợp lệ"),
+  username: z.string().min(3, "Tên không được dưới 3 ký tự"),
   password: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
 });
 type SignInFormValues = z.infer<typeof signInSchema>;
@@ -15,6 +18,8 @@ export function SigninForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const { signIn } = useAuthStore();
+  const navigate = useNavigate();
   const {
     register,
     handleSubmit,
@@ -22,7 +27,12 @@ export function SigninForm({
   } = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
   });
-  const onSubmit = async (data: SignInFormValues) => {};
+  const onSubmit = async (data: SignInFormValues) => {
+    const { username, password } = data;
+    const res = await signIn(username, password);
+    toast.success(res.message);
+    navigate("/");
+  };
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card className="overflow-hidden p-0 border-border">
@@ -39,18 +49,17 @@ export function SigninForm({
                 </p>
               </div>
               <div className="flex flex-col gap-3">
-                <Label htmlFor="email" className="block text-sm">
-                  Email
+                <Label htmlFor="username" className="block text-sm">
+                  Tên đăng nhập
                 </Label>
                 <Input
-                  type="email"
-                  id="email"
-                  placeholder="gmail.com"
-                  {...register("email")}
+                  type="username"
+                  id="username"
+                  {...register("username")}
                 />
-                {errors.email && (
+                {errors.username && (
                   <p className="text-destructive text-sm">
-                    {errors.email.message}
+                    {errors.username.message}
                   </p>
                 )}
               </div>
