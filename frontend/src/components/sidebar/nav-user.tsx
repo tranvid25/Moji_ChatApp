@@ -34,20 +34,23 @@ export function NavUser({ user }: { user: User }) {
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <SidebarMenuButton size="lg" className="aria-expanded:bg-muted" />
-            }
-          >
-            <Avatar>
-              <AvatarImage src={user.avatarUrl} alt={user.displayName} />
-              <AvatarFallback>{user.displayName.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <div className="grid flex-1 text-left text-sm leading-tight">
-              <span className="truncate font-medium">{user.displayName}</span>
-              <span className="truncate text-xs">{user.email}</span>
-            </div>
-            <ChevronsUpDownIcon className="ml-auto size-4" />
+          <DropdownMenuTrigger asChild>
+            <SidebarMenuButton
+              size="lg"
+              className="aria-expanded:bg-muted flex items-center gap-2 w-full"
+            >
+              <Avatar>
+                <AvatarImage src={user.avatarUrl} alt={user.displayName} />
+                <AvatarFallback>{user.displayName.charAt(0)}</AvatarFallback>
+              </Avatar>
+
+              <div className="grid flex-1 text-left text-sm leading-tight">
+                <span className="truncate font-medium">{user.displayName}</span>
+                <span className="truncate text-xs">{user.email}</span>
+              </div>
+
+              <ChevronsUpDownIcon className="ml-auto size-4" />
+            </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="min-w-56 rounded-lg"

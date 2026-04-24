@@ -30,16 +30,22 @@ const MessageItem = ({
   return (
     <div
       className={cn(
-        "flex gap-2 message-bounce mt-1",
+        "flex w-full gap-2 mt-1 message-bounce",
         message.isOwn ? "justify-end" : "justify-start",
       )}
     >
-      {!message.isOwn && isGroupBreak && (
-        <UserAvatar
-          type="chat"
-          name={participant?.displayName ?? "Moji"}
-          avatarUrl={participant?.avatarUrl ?? undefined}
-        />
+      {!message.isOwn && (
+        <div className="w-10 shrink-0 flex justify-center">
+          {isGroupBreak ? (
+            <UserAvatar
+              type="chat"
+              name={participant?.displayName ?? "Moji"}
+              avatarUrl={participant?.avatarUrl ?? undefined}
+            />
+          ) : (
+            <div className="size-8" />
+          )}
+        </div>
       )}
 
       <div

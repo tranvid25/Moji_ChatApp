@@ -121,3 +121,14 @@ export const getMessages = async (req, res) => {
     return res.status(500).json({ message: "Lỗi hệ thống" });
   }
 };
+export const getUserConversationsForSocketIO = async (userId) => {
+  try {
+    const conversations=await Conversation.find({
+      "participants.userId":userId
+    },{_id:1});
+    return conversations.map(convo=>convo._id.toString());
+  } catch (error) {
+    console.log("Lỗi khi lấy danh sách hộp thoại cho Socket IO", error);
+    return [];
+  }
+}

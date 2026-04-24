@@ -53,8 +53,9 @@ export function SigninForm({
                   Tên đăng nhập
                 </Label>
                 <Input
-                  type="username"
+                  type="text"
                   id="username"
+                  autoComplete="username"
                   {...register("username")}
                 />
                 {errors.username && (

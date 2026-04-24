@@ -4,6 +4,7 @@ import type { AuthState } from "@/types/store";
 import { toast } from "sonner";
 import { persist } from "zustand/middleware";
 import { useChatStore } from "./useChatStore";
+import { useSocketStore } from "./useSocketStore";
 
 export const useAuthStore = create<AuthState>()(
   persist(
@@ -16,8 +17,9 @@ export const useAuthStore = create<AuthState>()(
       },
       clearState: () => {
         set({ loading: false, accessToken: null, user: null });
-        localStorage.clear();
+        localStorage.removeItem("auth-storage");
         useChatStore.getState().reset();
+        useSocketStore.getState().disconnectSocket();
       },
       signUp: async (lastname, firstname, username, email, password) => {
         try {
