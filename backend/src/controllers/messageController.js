@@ -1,6 +1,10 @@
 import Conversation from "../models/Conversation.js";
 import Message from "../models/Message.js";
-import { updateConversationAfterCreateMessage } from "../utils/messageHelper.js";
+import {
+  emitNewMessage,
+  updateConversationAfterCreateMessage,
+} from "../utils/messageHelper.js";
+import { io } from "../socket/index.js";
 export const sendDirectMessage = async (req, res) => {
   try {
     const { recipientId, content, conversationId, imgUrl } = req.body;
@@ -35,6 +39,7 @@ export const sendDirectMessage = async (req, res) => {
     });
     updateConversationAfterCreateMessage(conversation, senderId, message);
     await conversation.save();
+    emitNewMessage(io, conversation, message);
     return res.status(200).json({
       message,
     });
@@ -62,6 +67,7 @@ export const sendGroupMessage = async (req, res) => {
     });
     updateConversationAfterCreateMessage(conversation, senderId, message);
     await conversation.save();
+    emitNewMessage(io, conversation, message);
     return res.status(200).json({ message });
   } catch (error) {
     console.log("Lỗi khi gửi tin nhắn nhóm", error);
