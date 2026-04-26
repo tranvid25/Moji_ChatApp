@@ -25,29 +25,46 @@ export const useSocketStore = create<SocketState>((set, get) => ({
     socket.on("onlineUsers", (userIds) => {
       set({ onlineUsers: userIds });
     });
-    socket.on("new-message",({message,conversation,unreadCount})=>{
-        useChatStore.getState().addMessage(message);
-        const lastMessage={
-            _id:conversation.lastMessage._id,
-            content:conversation.lastMessage.content,
-            createdAt:conversation.lastMessage.createdAt,
-            senderId:{
-                _id:conversation.lastMessage.senderId,
-                displayName:"",
-                avatarUrl:null
-            }
-        };
-        const updatedConversation={
-            ...conversation,
-            lastMessage,
-            unreadCount
-        }
-        if(useChatStore.getState().activeConversationId===message.conversationId){
-            // đánh dấu là đã đọc
-
-        }
-        useChatStore.getState().updateConversation(updatedConversation);
-    })
+    socket.on("new-message", ({ message, conversation, unreadCount }) => {
+      useChatStore.getState().addMessage(message);
+      const lastMessage = {
+        _id: conversation.lastMessage._id,
+        content: conversation.lastMessage.content,
+        createdAt: conversation.lastMessage.createdAt,
+        senderId: {
+          _id: conversation.lastMessage.senderId,
+          displayName: "",
+          avatarUrl: null,
+        },
+      };
+      const updatedConversation = {
+        ...conversation,
+        lastMessage,
+        unreadCount,
+      };
+      if (
+        useChatStore.getState().activeConversationId === message.conversationId
+      ) {
+        useChatStore.getState().markAsSeen();
+      }
+      useChatStore.getState().updateConversation(updatedConversation);
+    });
+    //READ MESSAGE
+    socket.on("read-message", ({ conversation, lastMessage }) => {
+      const updated = {
+        _id: conversation._id,
+        lastMessage,
+        lastMessageAt: conversation.lastMessageAt,
+        unreadCount: conversation.unreadCount,
+        seenBy: conversation.seenBy,
+      };
+      useChatStore.getState().updateConversation(updated);
+    });
+    //new group chat
+    socket.on("new-group", (conversation) => {
+      useChatStore.getState().addConvo(conversation);
+      socket.emit("join-conversation",conversation._id);
+    });
   },
   disconnectSocket: () => {
     const socket = get().socket;

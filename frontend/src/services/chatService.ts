@@ -24,24 +24,57 @@ export const chatService = {
     content: string = "",
     imgUrl?: string,
     conversationId?: string,
+    imageFile?: File,
   ) {
-    const res = await api.post(
-      "/messages/direct",
-      { recipientId, content, imgUrl, conversationId },
-      { withCredentials: true },
-    );
+    const payload = new FormData();
+    payload.append("recipientId", recipientId);
+    payload.append("content", content);
+    if (imgUrl) payload.append("imgUrl", imgUrl);
+    if (conversationId) payload.append("conversationId", conversationId);
+    if (imageFile) payload.append("image", imageFile);
+
+    const res = await api.post("/messages/direct", payload, {
+      withCredentials: true,
+      headers: { "Content-Type": "multipart/form-data" },
+    });
     return res.data.message;
   },
   async sendGroupMessage(
     conversationId: string,
     content: string = "",
     imgUrl?: string,
+    allowBlockedGroupMessage?: boolean,
+    imageFile?: File,
+  ) {
+    const payload = new FormData();
+    payload.append("conversationId", conversationId);
+    payload.append("content", content);
+    if (imgUrl) payload.append("imgUrl", imgUrl);
+    if (typeof allowBlockedGroupMessage === "boolean") {
+      payload.append("allowBlockedGroupMessage", String(allowBlockedGroupMessage));
+    }
+    if (imageFile) payload.append("image", imageFile);
+
+    const res = await api.post("/messages/group", payload, {
+      withCredentials: true,
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return res.data.message;
+  },
+  async markAsSeen(conversationId: string) {
+    const res = await api.patch(`/conversations/${conversationId}/seen`);
+    return res.data;
+  },
+  async createConversation(
+    type: "direct" | "group",
+    name: string,
+    memberIds: string[],
   ) {
     const res = await api.post(
-      "/messages/group",
-      { conversationId, content, imgUrl },
+      "/conversations",
+      { type, name, memberIds },
       { withCredentials: true },
     );
-    return res.data.message;
+    return res.data.conversation;
   },
 };

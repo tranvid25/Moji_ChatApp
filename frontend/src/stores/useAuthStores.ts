@@ -15,10 +15,14 @@ export const useAuthStore = create<AuthState>()(
       setAccessToken: (accessToken) => {
         set({ accessToken });
       },
+      setUser: (user) => {
+        set({ user });
+      },
       clearState: () => {
         set({ loading: false, accessToken: null, user: null });
-        localStorage.removeItem("auth-storage");
         useChatStore.getState().reset();
+        localStorage.removeItem("auth-storage");
+        sessionStorage.clear();
         useSocketStore.getState().disconnectSocket();
       },
       signUp: async (lastname, firstname, username, email, password) => {
@@ -34,9 +38,11 @@ export const useAuthStore = create<AuthState>()(
           );
 
           return res;
-        } catch (error) {
+        } catch (error: any) {
           console.error(error);
-          toast.error("Đăng ký thất bại");
+          const message =
+            error?.response?.data?.message || error?.message || "Đăng ký thất bại";
+          throw new Error(message);
         } finally {
           set({ loading: false });
         }
@@ -44,6 +50,7 @@ export const useAuthStore = create<AuthState>()(
 
       signIn: async (username, password) => {
         try {
+          get().clearState();
           set({ loading: true });
           localStorage.clear();
           useChatStore.getState().reset();

@@ -18,6 +18,10 @@ const messageSchema = new mongoose.Schema(
       trim: true,
       default: null,
     },
+    imgUrl: {
+      type: String,
+      default: null,
+    },
     type: {
       type: String,
       enum: ["text", "image", "video", "file", "audio"],

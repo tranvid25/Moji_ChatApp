@@ -7,7 +7,10 @@ import {
   checkFriendship,
   checkGroupMembers,
 } from "../middlewares/friendMiddleware.js";
+import { upload } from "../middlewares/uploadMiddleware.js";
+
 const router = express.Router();
-router.post("/direct", checkFriendship, sendDirectMessage);
-router.post("/group", checkGroupMembers, sendGroupMessage);
+router.post("/direct", upload.single("image"), checkFriendship, sendDirectMessage);
+router.post("/group", upload.single("image"), checkGroupMembers, sendGroupMessage);
+
 export default router;

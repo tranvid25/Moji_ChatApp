@@ -1,5 +1,6 @@
 import Conversation from "../models/Conversation.js";
 import Friend from "../models/Friend.js";
+import Block from "../models/Block.js";
 
 const pair = (a, b) => (a < b ? [a, b] : [b, a]);
 export const checkFriendship = async (req, res, next) => {
@@ -44,6 +45,9 @@ export const checkFriendship = async (req, res, next) => {
 export const checkGroupMembers = async (req, res, next) => {
   try {
     const { conversationId } = req.body;
+    const allowBlockedGroupMessage =
+      req.body?.allowBlockedGroupMessage === true ||
+      req.body?.allowBlockedGroupMessage === "true";
     const userId = req.user._id;
     const conversation = await Conversation.findById(conversationId);
     if (!conversation) {
@@ -57,7 +61,31 @@ export const checkGroupMembers = async (req, res, next) => {
         .status(400)
         .json({ message: "Bạn không phải là thành viên của hộp thoại này" });
     }
+
+    const participantIds = conversation.participants
+      .map((p) => p.userId.toString())
+      .filter((id) => id !== userId.toString());
+
+    const blockedUsersInGroupRaw = await Block.find({
+      blocker: userId,
+      blocked: { $in: participantIds },
+    }).select("blocked");
+
+    const blockedUsersInGroup = blockedUsersInGroupRaw.map((b) =>
+      b.blocked.toString(),
+    );
+
+    if (blockedUsersInGroup.length > 0 && !allowBlockedGroupMessage) {
+      return res.status(409).json({
+        code: "GROUP_BLOCKED_MEMBER_CONFIRM_REQUIRED",
+        message:
+          "Trong nhóm có người bạn đã chặn. Bạn có muốn tiếp tục nhắn tin không?",
+        blockedUserIds: blockedUsersInGroup,
+      });
+    }
+
     req.conversation = conversation;
+    req.blockedUsersInGroup = blockedUsersInGroup;
     next();
   } catch (error) {
     console.error("Lỗi khi kiểm tra thành viên nhóm", error);

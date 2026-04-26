@@ -92,6 +92,12 @@ const conversationSchema = new mongoose.Schema(
       of: Number,
       default: {},
     },
+    mutedBy: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   {
     timestamps: true,

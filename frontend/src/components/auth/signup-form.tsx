@@ -41,8 +41,15 @@ export function SignupForm({
         email,
         password,
       );
+
+      if (response) {
+        toast.success(response?.message || "Đăng ký thành công");
+        navigate("/signin");
+      }
     } catch (error: any) {
-      toast.error(error.message || "Đăng ký thất bại");
+      const message =
+        error?.response?.data?.message || error?.message || "Đăng ký thất bại";
+      toast.error(message);
     }
   };
   return (
@@ -68,7 +75,7 @@ export function SignupForm({
                   <Input type="text" id="lastname" {...register("lastname")} />
 
                   {errors.lastname && (
-                    <p className="text-destructive text-sm">
+                    <p className="error-message">
                       {errors.lastname.message}
                     </p>
                   )}
@@ -83,7 +90,7 @@ export function SignupForm({
                     {...register("firstname")}
                   />
                   {errors.firstname && (
-                    <p className="text-destructive text-sm">
+                    <p className="error-message">
                       {errors.firstname.message}
                     </p>
                   )}
@@ -101,7 +108,7 @@ export function SignupForm({
                 />
 
                 {errors.username && (
-                  <p className="text-destructive text-sm">
+                  <p className="error-message">
                     {errors.username.message}
                   </p>
                 )}
@@ -117,7 +124,7 @@ export function SignupForm({
                   {...register("email")}
                 />
                 {errors.email && (
-                  <p className="text-destructive text-sm">
+                  <p className="error-message">
                     {errors.email.message}
                   </p>
                 )}
@@ -132,7 +139,7 @@ export function SignupForm({
                   {...register("password")}
                 />
                 {errors.password && (
-                  <p className="text-destructive text-sm">
+                  <p className="error-message">
                     {errors.password.message}
                   </p>
                 )}

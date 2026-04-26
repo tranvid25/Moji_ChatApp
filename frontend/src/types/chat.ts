@@ -32,6 +32,7 @@ export interface Conversation {
   seenBy: SeenUser[];
   lastMessage: LastMessage | null;
   unreadCount: Record<string, number>;
+  mutedBy?: string[];
   createdAt: string;
   updatedAt: string;
 }

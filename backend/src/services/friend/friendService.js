@@ -62,7 +62,7 @@ export const acceptFriendRequestService = async (requestId, userId) => {
     .lean();
   return fromUser;
 };
-export const declineFriendRequestService = async (userId, requestId) => {
+export const declineFriendRequestService = async (requestId, userId) => {
   const request = await FriendRequest.findById(requestId);
   if (!request) {
     throw new Error("REQUEST_NOT_FOUND");
@@ -79,14 +79,17 @@ export const getAllFriendsService = async (userId) => {
   const friendships = await Friend.find({
     $or: [{ userA: userId }, { userB: userId }],
   })
-    .populate("userA", "_id displayName avatarUrl")
-    .populate("userB", "_id displayName avatarUrl")
+    .populate("userA", "_id displayName avatarUrl username")
+    .populate("userB", "_id displayName avatarUrl username")
     .lean();
+
   if (!friendships || friendships.length === 0) {
-    throw new Error("NO_FRIENDS");
+    return [];
   }
+
   const friends = friendships.map((f) =>
     f.userA._id.toString() === userId.toString() ? f.userB : f.userA,
   );
+
   return friends;
 };
