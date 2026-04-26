@@ -27,10 +27,14 @@ const ChatWindowLayout = () => {
     };
     markSeen();
   }, [markAsSeen, selectedConvo]);
+  const currentMessages = activeConversationId ? messages[activeConversationId]?.items : [];
+  const isInitialLoading = loading && (!currentMessages || currentMessages.length === 0);
+
   if (!selectedConvo) {
     return <ChatWelcomeScreen />;
   }
-  if (loading) {
+
+  if (isInitialLoading) {
     return <ChatWindowSkeleton />;
   }
   return (
