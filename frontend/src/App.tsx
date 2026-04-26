@@ -8,6 +8,7 @@ import { useThemeStore } from "./stores/useThemeStore";
 import { useEffect } from "react";
 import { useAuthStore } from "./stores/useAuthStores";
 import { useSocketStore } from "./stores/useSocketStore";
+import VideoCall from "./components/chat/VideoCall";
 
 function App() {
   const { isDark, setTheme } = useThemeStore();
@@ -29,6 +30,8 @@ function App() {
   return (
     <>
       <Toaster richColors />
+      {/* Global video call overlay */}
+      <VideoCall />
       <BrowserRouter>
         <Routes>
           {/* public routes*/}

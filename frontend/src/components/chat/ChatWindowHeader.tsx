@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { EllipsisVertical, Users, LogOut, PencilLine, BellOff, Bell } from "lucide-react";
+import { EllipsisVertical, Users, LogOut, PencilLine, BellOff, Bell, Video } from "lucide-react";
+import { useVideoCallStore } from "@/stores/useVideoCallStore";
+import { useWebRTC } from "@/hooks/useWebRTC";
 import { useChatStore } from "@/stores/useChatStore";
 import { useSocketStore } from "@/stores/useSocketStore";
 import { useAuthStore } from "@/stores/useAuthStores";
@@ -35,6 +37,9 @@ const ChatWindowHeader = ({ chat }: { chat?: Conversation }) => {
   const { leaveGroupConversation, renameGroupConversation, muteGroupConversation } =
     useUserStore();
 
+  const { initiateCall } = useVideoCallStore();
+  const { startCall } = useWebRTC();
+
   const [showGroupMembers, setShowGroupMembers] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
@@ -59,6 +64,18 @@ const ChatWindowHeader = ({ chat }: { chat?: Conversation }) => {
   const isMuted = chat.type === "group" && user
     ? (chat.mutedBy || []).includes(user._id)
     : false;
+
+  // handleVideoCall defined here so otherUser is already resolved
+  const handleVideoCall = async () => {
+    if (!otherUser || !chat || chat.type !== "direct") return;
+    initiateCall({
+      conversationId: chat._id,
+      remoteUserId: otherUser._id,
+      remoteUserName: otherUser.displayName,
+      remoteUserAvatar: otherUser.avatarUrl ?? null,
+    });
+    await startCall();
+  };
 
   const handleRenameGroup = async () => {
     if (!chat || chat.type !== "group" || !newGroupName.trim()) return;
@@ -153,6 +170,22 @@ const ChatWindowHeader = ({ chat }: { chat?: Conversation }) => {
             <h2 className="font-semibold text-foreground">
               {chat.type === "direct" ? otherUser?.displayName : chat.group?.name}
             </h2>
+
+            {/* Video call button – only for direct chats */}
+            {chat.type === "direct" && (
+              <div className="ml-auto">
+                <Button
+                  id="btn-start-video-call"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-primary hover:bg-primary/10"
+                  onClick={handleVideoCall}
+                  title="Gọi video"
+                >
+                  <Video className="size-4" />
+                </Button>
+              </div>
+            )}
 
             {chat.type === "group" && (
               <div className="ml-auto">

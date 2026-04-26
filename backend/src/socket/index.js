@@ -59,6 +59,77 @@ io.on("connection", async (socket) => {
     await emitOnlineUsers();
   });
 
+  // ─── WebRTC Signaling ────────────────────────────────────────────────────
+
+  /**
+   * Caller → Server → Callee
+   * Payload: { to, conversationId, offer }
+   *
+   * The server forwards the offer plus caller identity to the callee's socket room.
+   */
+  socket.on("call-user", ({ to, conversationId, offer }) => {
+    if (!to || !offer) return;
+
+    const callerName = user.displayName || user.username || "Unknown";
+    const callerAvatar = user.avatarUrl || null;
+
+    // Emit to all sockets belonging to the target user
+    io.to(to).emit("incoming-call", {
+      from: userId,
+      fromName: callerName,
+      fromAvatar: callerAvatar,
+      conversationId,
+      offer,
+    });
+
+    console.log(`[WebRTC] call-user: ${userId} → ${to}`);
+  });
+
+  /**
+   * Callee → Server → Caller
+   * Payload: { to, conversationId, answer }
+   */
+  socket.on("answer-call", ({ to, answer }) => {
+    if (!to || !answer) return;
+
+    io.to(to).emit("call-answered", {
+      from: userId,
+      answer,
+    });
+
+    console.log(`[WebRTC] answer-call: ${userId} → ${to}`);
+  });
+
+  /**
+   * Both sides send ICE candidates through the server.
+   * Payload: { to, candidate }
+   */
+  socket.on("ice-candidate", ({ to, candidate }) => {
+    if (!to || !candidate) return;
+
+    io.to(to).emit("ice-candidate", {
+      from: userId,
+      candidate,
+    });
+  });
+
+  /**
+   * Either side can end / reject the call.
+   * Payload: { to, conversationId, reason }
+   */
+  socket.on("end-call", ({ to, reason }) => {
+    if (!to) return;
+
+    io.to(to).emit("call-ended", {
+      from: userId,
+      reason: reason || "ended",
+    });
+
+    console.log(`[WebRTC] end-call: ${userId} → ${to} (${reason})`);
+  });
+
+  // ─── Disconnect ──────────────────────────────────────────────────────────
+
   socket.on("disconnect", async () => {
     const sockets = onlineUsers.get(userId);
     if (sockets) {
@@ -75,3 +146,4 @@ io.on("connection", async (socket) => {
 });
 
 export { io };
+

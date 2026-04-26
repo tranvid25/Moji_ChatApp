@@ -3,7 +3,10 @@ import { io, type Socket } from "socket.io-client";
 import { useAuthStore } from "./useAuthStores";
 import type { SocketState } from "@/types/store";
 import { useChatStore } from "./useChatStore";
+import { useVideoCallStore } from "./useVideoCallStore";
+
 const baseUrl = import.meta.env.VITE_SOCKET_URL;
+
 export const useSocketStore = create<SocketState>((set, get) => ({
   socket: null,
   onlineUsers: [],
@@ -19,12 +22,15 @@ export const useSocketStore = create<SocketState>((set, get) => ({
       withCredentials: true,
     });
     set({ socket });
+
     socket.on("connect", () => {
       console.log("socket connected");
     });
+
     socket.on("onlineUsers", (userIds) => {
       set({ onlineUsers: userIds });
     });
+
     socket.on("new-message", ({ message, conversation, unreadCount }) => {
       useChatStore.getState().addMessage(message);
       const lastMessage = {
@@ -49,7 +55,8 @@ export const useSocketStore = create<SocketState>((set, get) => ({
       }
       useChatStore.getState().updateConversation(updatedConversation);
     });
-    //READ MESSAGE
+
+    // READ MESSAGE
     socket.on("read-message", ({ conversation, lastMessage }) => {
       const updated = {
         _id: conversation._id,
@@ -60,12 +67,98 @@ export const useSocketStore = create<SocketState>((set, get) => ({
       };
       useChatStore.getState().updateConversation(updated);
     });
-    //new group chat
+
+    // NEW GROUP CHAT
     socket.on("new-group", (conversation) => {
       useChatStore.getState().addConvo(conversation);
-      socket.emit("join-conversation",conversation._id);
+      socket.emit("join-conversation", conversation._id);
+    });
+
+    // ─── WebRTC Signaling Events ──────────────────────────────────────────
+
+    /**
+     * Fired on the CALLEE side when someone calls them.
+     * Payload: { from, fromName, fromAvatar, conversationId, offer }
+     */
+    socket.on(
+      "incoming-call",
+      ({
+        from,
+        fromName,
+        fromAvatar,
+        conversationId,
+        offer,
+      }: {
+        from: string;
+        fromName: string;
+        fromAvatar?: string;
+        conversationId: string;
+        offer: RTCSessionDescriptionInit;
+      }) => {
+        const callStore = useVideoCallStore.getState();
+
+        // Ignore if already in a call
+        if (callStore.status !== "idle") return;
+
+        // Stash the offer on window so VideoCall component can access it
+        // (avoids making store aware of RTCSessionDescriptionInit)
+        (window as unknown as Record<string, unknown>).__pendingOffer = offer;
+
+        callStore.receiveCall({
+          conversationId,
+          remoteUserId: from,
+          remoteUserName: fromName,
+          remoteUserAvatar: fromAvatar,
+        });
+      },
+    );
+
+    /**
+     * Fired on the CALLER side when the callee answers.
+     * Payload: { from, answer }
+     */
+    socket.on(
+      "call-answered",
+      async ({
+        answer,
+      }: {
+        from: string;
+        answer: RTCSessionDescriptionInit;
+      }) => {
+        const pc = useVideoCallStore.getState().peerConnection;
+        if (!pc) return;
+        await pc.setRemoteDescription(new RTCSessionDescription(answer));
+      },
+    );
+
+    /**
+     * Fired on both sides for ICE negotiation.
+     * Payload: { from, candidate }
+     */
+    socket.on(
+      "ice-candidate",
+      async ({ candidate }: { from: string; candidate: RTCIceCandidateInit }) => {
+        const pc = useVideoCallStore.getState().peerConnection;
+        if (!pc) return;
+        try {
+          await pc.addIceCandidate(new RTCIceCandidate(candidate));
+        } catch (err) {
+          console.error("[Socket] Error adding ICE candidate:", err);
+        }
+      },
+    );
+
+    /**
+     * Fired on both sides when the other party ends/rejects the call.
+     */
+    socket.on("call-ended", () => {
+      const callStore = useVideoCallStore.getState();
+      if (callStore.status !== "idle") {
+        callStore.endCall();
+      }
     });
   },
+
   disconnectSocket: () => {
     const socket = get().socket;
     if (socket) {
