@@ -128,7 +128,85 @@ io.on("connection", async (socket) => {
     console.log(`[WebRTC] end-call: ${userId} → ${to} (${reason})`);
   });
 
+
+  // ─── Group Call Signaling (LiveKit) ───────────────────────────────────────
+  //
+  // LiveKit handles ALL media/transport.
+  // Socket.IO chỉ dùng để: notify ai đang gọi, invite participants, và broadcast
+  // các sự kiện join/leave để UI cập nhật.
+
+  /**
+   * Caller bắt đầu cuộc gọi nhóm.
+   * Payload: { conversationId, groupName, participantIds }
+   */
+  socket.on("start-group-call", ({ conversationId, groupName, participantIds }) => {
+    if (!conversationId || !participantIds) return;
+
+    const callerName = user.displayName || user.username || "Unknown";
+    const callerAvatar = user.avatarUrl || null;
+
+    // Gửi thông báo tới từng thành viên (Trừ người gọi)
+    participantIds.forEach(pId => {
+      // Bảo vệ: pId và userId phải tồn tại
+      if (pId && userId && pId.toString() !== userId.toString()) {
+        io.to(pId.toString()).emit("incoming-group-call", {
+          conversationId,
+          groupName,
+          callerName,
+          callerAvatar,
+          callerId: userId,
+        });
+      }
+    });
+
+    console.log(`[GroupCall] ${callerName} invited ${participantIds.length} users in ${conversationId}`);
+  });
+
+  /**
+   * User tham gia cuộc gọi – thông báo cho các người khác.
+   * Payload: { conversationId }
+   */
+  socket.on("join-group-call", ({ conversationId }) => {
+    if (!conversationId) return;
+
+    socket.to(conversationId).emit("participant-joined-group-call", {
+      userId,
+      userName: user.displayName || user.username,
+      conversationId,
+    });
+    console.log(`[GroupCall] ${userId} joined room ${conversationId}`);
+  });
+
+  /**
+   * User rời cuộc gọi.
+   * Payload: { conversationId }
+   */
+  socket.on("leave-group-call", ({ conversationId }) => {
+    if (!conversationId) return;
+
+    socket.to(conversationId).emit("participant-left-group-call", {
+      userId,
+      conversationId,
+    });
+    console.log(`[GroupCall] ${userId} left room ${conversationId}`);
+  });
+
+  /**
+   * User từ chối cuộc gọi – báo lại cho caller.
+   * Payload: { conversationId, callerId }
+   */
+  socket.on("reject-group-call", ({ conversationId, callerId }) => {
+    if (!callerId) return;
+
+    io.to(callerId).emit("group-call-rejected", {
+      userId,
+      userName: user.displayName || user.username,
+      conversationId,
+    });
+  });
+
   // ─── Disconnect ──────────────────────────────────────────────────────────
+
 
   socket.on("disconnect", async () => {
     const sockets = onlineUsers.get(userId);

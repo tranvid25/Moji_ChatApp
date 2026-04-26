@@ -2,6 +2,7 @@ import { useState } from "react";
 import { EllipsisVertical, Users, LogOut, PencilLine, BellOff, Bell, Video } from "lucide-react";
 import { useVideoCallStore } from "@/stores/useVideoCallStore";
 import { useWebRTC } from "@/hooks/useWebRTC";
+import { useGroupCall } from "@/hooks/useGroupCall";
 import { useChatStore } from "@/stores/useChatStore";
 import { useSocketStore } from "@/stores/useSocketStore";
 import { useAuthStore } from "@/stores/useAuthStores";
@@ -40,6 +41,8 @@ const ChatWindowHeader = ({ chat }: { chat?: Conversation }) => {
   const { initiateCall } = useVideoCallStore();
   const { startCall } = useWebRTC();
 
+  const { startCall: startGroupCall } = useGroupCall();
+
   const [showGroupMembers, setShowGroupMembers] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
@@ -75,6 +78,17 @@ const ChatWindowHeader = ({ chat }: { chat?: Conversation }) => {
       remoteUserAvatar: otherUser.avatarUrl ?? null,
     });
     await startCall();
+  };
+
+  const handleGroupVideoCall = async () => {
+    if (!chat || chat.type !== "group") return;
+    await startGroupCall({
+      conversationId: chat._id,
+      groupName: chat.group?.name || "Cuộc gọi nhóm",
+      participantIds: chat.participants
+        .map((p: any) => p._id)
+        .filter((id: any) => !!id),
+    });
   };
 
   const handleRenameGroup = async () => {
@@ -188,9 +202,20 @@ const ChatWindowHeader = ({ chat }: { chat?: Conversation }) => {
             )}
 
             {chat.type === "group" && (
-              <div className="ml-auto">
+              <div className="ml-auto flex items-center gap-1">
+                <Button
+                  id="btn-start-group-call"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-primary hover:bg-primary/10"
+                  onClick={handleGroupVideoCall}
+                  title="Gọi video nhóm"
+                >
+                  <Video className="size-4" />
+                </Button>
+
                 <DropdownMenu>
-                  <DropdownMenuTrigger>
+                  <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-8 w-8">
                       <EllipsisVertical className="size-4" />
                     </Button>

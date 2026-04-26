@@ -45,6 +45,9 @@ export interface Message {
   senderId: string;
   content: string | null;
   imgUrl?: string | null;
+  fileUrl?: string | null;
+  fileName?: string | null;
+  type?: "text" | "image" | "video" | "file" | "audio" | "location";
   updatedAt?: string | null;
   createdAt: string;
   isOwn?: boolean;

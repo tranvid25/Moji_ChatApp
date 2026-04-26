@@ -7,6 +7,20 @@ import {
 } from "../utils/messageHelper.js";
 import { io } from "../socket/index.js";
 import { uploadImageFromBuffer } from "../middlewares/uploadMiddleware.js";
+import fs from "fs";
+import path from "path";
+
+const saveFileLocally = (buffer, originalname) => {
+  const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+  const ext = path.extname(originalname);
+  const fileName = uniqueSuffix + ext;
+  const filePath = path.join(process.cwd(), "uploads", "files", fileName);
+  fs.writeFileSync(filePath, buffer);
+  return {
+    fileUrl: `/uploads/files/${fileName}`,
+    fileName: originalname
+  };
+};
 
 export const sendDirectMessage = async (req, res) => {
   try {
@@ -22,12 +36,32 @@ export const sendDirectMessage = async (req, res) => {
     }
 
     let finalImgUrl = imgUrl || null;
+    let fileUrl = null;
+    let fileName = null;
+    let fileSize = null;
+    let msgType = req.body.type || (finalImgUrl ? "image" : "text");
+
     if (file?.buffer) {
-      const uploadResult = await uploadImageFromBuffer(file.buffer, {
-        folder: "moji_chat/messages",
-        transformation: [{ width: 1200, height: 1200, crop: "limit" }],
-      });
-      finalImgUrl = uploadResult?.secure_url;
+      fileSize = file.size; // Or file.buffer.length
+      if (file.mimetype.startsWith("image/")) {
+        const uploadResult = await uploadImageFromBuffer(file.buffer, {
+          folder: "moji_chat/messages",
+          transformation: [{ width: 1200, height: 1200, crop: "limit" }],
+        });
+        finalImgUrl = uploadResult?.secure_url;
+        if (!req.body.type) msgType = "image";
+      } else {
+        const result = saveFileLocally(file.buffer, file.originalname);
+        fileUrl = result.fileUrl;
+        fileName = result.fileName;
+        if (!req.body.type) {
+          if (file.mimetype.startsWith("audio/")) {
+              msgType = "audio";
+          } else {
+              msgType = "file";
+          }
+        }
+      }
     }
     // Tìm xem 2 người đó đã nhắn nếu có thì tiếp tục
     if (conversationId) {
@@ -63,7 +97,10 @@ export const sendDirectMessage = async (req, res) => {
       senderId,
       content: content || null,
       imgUrl: finalImgUrl,
-      type: finalImgUrl ? "image" : "text",
+      fileUrl,
+      fileName,
+      fileSize,
+      type: msgType,
     });
     updateConversationAfterCreateMessage(conversation, senderId, message);
     await conversation.save();
@@ -91,13 +128,33 @@ export const sendGroupMessage = async (req, res) => {
         .json({ message: "Nội dung tin nhắn không được để trống" });
     }
 
-    let finalImgUrl = null;
+    let finalImgUrl = req.body.imgUrl || null;
+    let fileUrl = null;
+    let fileName = null;
+    let fileSize = null;
+    let msgType = req.body.type || (finalImgUrl ? "image" : "text");
+
     if (file?.buffer) {
-      const uploadResult = await uploadImageFromBuffer(file.buffer, {
-        folder: "moji_chat/messages",
-        transformation: [{ width: 1200, height: 1200, crop: "limit" }],
-      });
-      finalImgUrl = uploadResult?.secure_url;
+      fileSize = file.size;
+      if (file.mimetype.startsWith("image/")) {
+        const uploadResult = await uploadImageFromBuffer(file.buffer, {
+          folder: "moji_chat/messages",
+          transformation: [{ width: 1200, height: 1200, crop: "limit" }],
+        });
+        finalImgUrl = uploadResult?.secure_url;
+        if (!req.body.type) msgType = "image";
+      } else {
+        const result = saveFileLocally(file.buffer, file.originalname);
+        fileUrl = result.fileUrl;
+        fileName = result.fileName;
+        if (!req.body.type) {
+          if (file.mimetype.startsWith("audio/")) {
+              msgType = "audio";
+          } else {
+              msgType = "file";
+          }
+        }
+      }
     }
 
     const message = await Message.create({
@@ -105,7 +162,10 @@ export const sendGroupMessage = async (req, res) => {
       senderId,
       content: content || null,
       imgUrl: finalImgUrl,
-      type: finalImgUrl ? "image" : "text",
+      fileUrl,
+      fileName,
+      fileSize,
+      type: msgType,
     });
     updateConversationAfterCreateMessage(conversation, senderId, message);
     await conversation.save();

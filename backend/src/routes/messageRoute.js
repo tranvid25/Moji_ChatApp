@@ -10,7 +10,7 @@ import {
 import { upload } from "../middlewares/uploadMiddleware.js";
 
 const router = express.Router();
-router.post("/direct", upload.single("image"), checkFriendship, sendDirectMessage);
-router.post("/group", upload.single("image"), checkGroupMembers, sendGroupMessage);
+router.post("/direct", upload.single("file"), checkFriendship, sendDirectMessage);
+router.post("/group", upload.single("file"), checkGroupMembers, sendGroupMessage);
 
 export default router;

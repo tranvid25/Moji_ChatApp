@@ -22,9 +22,21 @@ const messageSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    fileName: {
+      type: String,
+      default: null,
+    },
+    fileUrl: {
+      type: String,
+      default: null,
+    },
+    fileSize: {
+      type: Number,
+      default: null,
+    },
     type: {
       type: String,
-      enum: ["text", "image", "video", "file", "audio"],
+      enum: ["text", "image", "video", "file", "audio", "location"],
       default: "text",
     },
     deletedFor: [

@@ -4,6 +4,7 @@ import { useAuthStore } from "./useAuthStores";
 import type { SocketState } from "@/types/store";
 import { useChatStore } from "./useChatStore";
 import { useVideoCallStore } from "./useVideoCallStore";
+import { useGroupCallStore } from "./useGroupCallStore";
 
 const baseUrl = import.meta.env.VITE_SOCKET_URL;
 
@@ -157,6 +158,42 @@ export const useSocketStore = create<SocketState>((set, get) => ({
         callStore.endCall();
       }
     });
+
+    // ─── Group Call Signaling Events ──────────────────────────────────────────
+
+    /**
+     * Fired when someone starts a group call in an active conversation.
+     */
+    socket.on(
+      "incoming-group-call",
+      async ({
+        conversationId,
+        groupName,
+        callerName,
+        callerAvatar,
+        callerId,
+      }: {
+        conversationId: string;
+        groupName: string;
+        callerName: string;
+        callerAvatar?: string;
+        callerId: string;
+      }) => {
+        const groupCallStore = useGroupCallStore.getState();
+        const videoCallStore = useVideoCallStore.getState();
+
+        // Ignore if already in any kind of call
+        if (groupCallStore.status !== "idle" || videoCallStore.status !== "idle") return;
+
+        groupCallStore.receiveCall({
+          conversationId,
+          groupName,
+          callerName,
+          callerAvatar,
+          callerId,
+        });
+      }
+    );
   },
 
   disconnectSocket: () => {

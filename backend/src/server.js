@@ -1,5 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
+import path from "path";
 import connectDB from "./config/database.js";
 import authRoute from "./routes/authRoute.js";
 import userRoute from "./routes/userRoute.js";
@@ -10,6 +11,7 @@ import friendRoute from "./routes/friendRoute.js";
 import messageRoute from "./routes/messageRoute.js";
 import conversationRoute from "./routes/conversationRoute.js";
 import settingsRoute from "./routes/settingsRoute.js";
+import groupCallRoute from "./routes/groupCallRoute.js";
 import swaggerUi from "swagger-ui-express";
 import fs from "fs";
 import { io } from "./socket/index.js";
@@ -39,6 +41,10 @@ const swaggerDocument = JSON.parse(
   fs.readFileSync("./src/swagger.json", "utf8"),
 );
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+// Serve files
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
+
 // public route
 app.use("/api/auth", authRoute);
 
@@ -48,6 +54,7 @@ app.use("/api/friends", friendRoute);
 app.use("/api/messages", messageRoute);
 app.use("/api/conversations", conversationRoute);
 app.use("/api/settings", settingsRoute);
+app.use("/api/group-call", groupCallRoute);
 
 // connect DB rồi mới start server
 connectDB()

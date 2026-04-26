@@ -75,18 +75,22 @@ export const useChatStore = create<ChatState>()(
           set({ messageLoading: false });
         }
       },
-      sendDirectMessage: async (recipientId, content, imgUrl, imageFile) => {
+      sendDirectMessage: async (recipientId, content, imgUrl, imageFile, type) => {
         const { activeConversationId } = get();
         const { user } = useAuthStore.getState();
         if (!user) return;
 
         const tempId = `temp-${Date.now()}`;
+        const fileIsImage = imageFile?.type?.startsWith("image/");
         const optimisticMessage: Message = {
           _id: tempId,
           conversationId: activeConversationId || "temp-convo",
           senderId: user._id,
           content: content || null,
-          imgUrl: imageFile ? URL.createObjectURL(imageFile) : imgUrl || null,
+          imgUrl: imageFile && fileIsImage ? URL.createObjectURL(imageFile) : imgUrl || null,
+          fileUrl: imageFile && !fileIsImage ? "" : null,
+          fileName: imageFile && !fileIsImage ? imageFile.name : null,
+          type: type ? (type as any) : (imageFile && !fileIsImage ? (imageFile.type.startsWith("audio/") ? "audio" : "file") : (imageFile ? "image" : "text")),
           createdAt: new Date().toISOString(),
           isOwn: true,
           isSending: true,
@@ -118,6 +122,7 @@ export const useChatStore = create<ChatState>()(
             imgUrl,
             activeConversationId || undefined,
             imageFile,
+            type
           );
 
           set((state) => {
@@ -172,17 +177,22 @@ export const useChatStore = create<ChatState>()(
         imgUrl,
         allowBlockedGroupMessage,
         imageFile,
+        type
       ) => {
         const { user } = useAuthStore.getState();
         if (!user) return;
 
         const tempId = `temp-${Date.now()}`;
+        const fileIsImage = imageFile?.type?.startsWith("image/");
         const optimisticMessage: Message = {
           _id: tempId,
           conversationId: conversationId,
           senderId: user._id,
           content: content || null,
-          imgUrl: imageFile ? URL.createObjectURL(imageFile) : imgUrl || null,
+          imgUrl: imageFile && fileIsImage ? URL.createObjectURL(imageFile) : imgUrl || null,
+          fileUrl: imageFile && !fileIsImage ? "" : null,
+          fileName: imageFile && !fileIsImage ? imageFile.name : null,
+          type: type ? (type as any) : (imageFile && !fileIsImage ? (imageFile.type.startsWith("audio/") ? "audio" : "file") : (imageFile ? "image" : "text")),
           createdAt: new Date().toISOString(),
           isOwn: true,
           isSending: true,
@@ -211,6 +221,7 @@ export const useChatStore = create<ChatState>()(
             imgUrl,
             allowBlockedGroupMessage,
             imageFile,
+            type,
           );
 
           set((state) => {
@@ -273,7 +284,7 @@ export const useChatStore = create<ChatState>()(
                 m.isSending &&
                 m.senderId === message.senderId &&
                 m.content === message.content &&
-                !!m.imgUrl === !!message.imgUrl,
+                m.type === message.type
             );
 
             if (optimisticIndex !== -1) {

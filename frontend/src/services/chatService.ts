@@ -25,13 +25,15 @@ export const chatService = {
     imgUrl?: string,
     conversationId?: string,
     imageFile?: File,
+    type?: string,
   ) {
     const payload = new FormData();
     payload.append("recipientId", recipientId);
     payload.append("content", content);
     if (imgUrl) payload.append("imgUrl", imgUrl);
     if (conversationId) payload.append("conversationId", conversationId);
-    if (imageFile) payload.append("image", imageFile);
+    if (imageFile) payload.append("file", imageFile);
+    if (type) payload.append("type", type);
 
     const res = await api.post("/messages/direct", payload, {
       withCredentials: true,
@@ -45,6 +47,7 @@ export const chatService = {
     imgUrl?: string,
     allowBlockedGroupMessage?: boolean,
     imageFile?: File,
+    type?: string,
   ) {
     const payload = new FormData();
     payload.append("conversationId", conversationId);
@@ -53,7 +56,8 @@ export const chatService = {
     if (typeof allowBlockedGroupMessage === "boolean") {
       payload.append("allowBlockedGroupMessage", String(allowBlockedGroupMessage));
     }
-    if (imageFile) payload.append("image", imageFile);
+    if (imageFile) payload.append("file", imageFile);
+    if (type) payload.append("type", type);
 
     const res = await api.post("/messages/group", payload, {
       withCredentials: true,
