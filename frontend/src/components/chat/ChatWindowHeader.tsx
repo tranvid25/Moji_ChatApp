@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { EllipsisVertical, Users, LogOut, PencilLine, BellOff, Bell, Video } from "lucide-react";
+import { EllipsisVertical, Users, LogOut, PencilLine, BellOff, Bell, Video, CalendarPlus } from "lucide-react";
 import { useVideoCallStore } from "@/stores/useVideoCallStore";
 import { useWebRTC } from "@/hooks/useWebRTC";
 import { useGroupCall } from "@/hooks/useGroupCall";
@@ -30,6 +30,7 @@ import {
 } from "../ui/dialog";
 import { Input } from "../ui/input";
 import GroupMembersDialog from "./GroupMembersDialog";
+import AppointmentDialog from "./AppointmentDialog";
 
 const ChatWindowHeader = ({ chat }: { chat?: Conversation }) => {
   const { activeConversationId, conversations } = useChatStore();
@@ -46,6 +47,7 @@ const ChatWindowHeader = ({ chat }: { chat?: Conversation }) => {
   const [showGroupMembers, setShowGroupMembers] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
+  const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
 
   let otherUser;
   chat = chat ?? conversations.find((c) => c._id === activeConversationId);
@@ -129,6 +131,11 @@ const ChatWindowHeader = ({ chat }: { chat?: Conversation }) => {
         groupName={chat.group?.name}
       />
 
+      <AppointmentDialog 
+        open={showAppointmentDialog} 
+        onOpenChange={setShowAppointmentDialog} 
+      />
+
       <Dialog open={showRenameDialog} onOpenChange={setShowRenameDialog}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -166,7 +173,7 @@ const ChatWindowHeader = ({ chat }: { chat?: Conversation }) => {
                 <>
                   <UserAvatar
                     type={"sidebar"}
-                    name={otherUser?.displayName || "Moji"}
+                    name={otherUser?.displayName || "TVChat"}
                   />
                   <StatusBadge
                     status={
@@ -200,6 +207,16 @@ const ChatWindowHeader = ({ chat }: { chat?: Conversation }) => {
                 </Button>
 
                 <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-primary hover:bg-primary/10"
+                  onClick={() => setShowAppointmentDialog(true)}
+                  title="Tạo lịch hẹn"
+                >
+                  <CalendarPlus className="size-4" />
+                </Button>
+
+                <Button
                   id="btn-start-video-call"
                   variant="ghost"
                   size="icon"
@@ -223,6 +240,16 @@ const ChatWindowHeader = ({ chat }: { chat?: Conversation }) => {
                   title="Họp Google Meet"
                 >
                   <span role="img" aria-label="call" className="text-base text-center w-full block leading-none">📞</span>
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-primary hover:bg-primary/10"
+                  onClick={() => setShowAppointmentDialog(true)}
+                  title="Tạo lịch hẹn"
+                >
+                  <CalendarPlus className="size-4" />
                 </Button>
 
                 <Button

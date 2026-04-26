@@ -27,6 +27,8 @@ export const chatService = {
     imageFile?: File,
     type?: string,
     replyToId?: string,
+    metadata?: { toolName?: string; link?: string },
+    isImportant?: boolean
   ) {
     const payload = new FormData();
     payload.append("recipientId", recipientId);
@@ -36,6 +38,8 @@ export const chatService = {
     if (imageFile) payload.append("file", imageFile);
     if (type) payload.append("type", type);
     if (replyToId) payload.append("replyTo", replyToId);
+    if (metadata) payload.append("metadata", JSON.stringify(metadata));
+    if (isImportant !== undefined) payload.append("isImportant", String(isImportant));
 
     const res = await api.post("/messages/direct", payload, {
       withCredentials: true,
@@ -51,6 +55,8 @@ export const chatService = {
     imageFile?: File,
     type?: string,
     replyToId?: string,
+    metadata?: { toolName?: string; link?: string },
+    isImportant?: boolean
   ) {
     const payload = new FormData();
     payload.append("conversationId", conversationId);
@@ -62,6 +68,8 @@ export const chatService = {
     if (imageFile) payload.append("file", imageFile);
     if (type) payload.append("type", type);
     if (replyToId) payload.append("replyTo", replyToId);
+    if (metadata) payload.append("metadata", JSON.stringify(metadata));
+    if (isImportant !== undefined) payload.append("isImportant", String(isImportant));
 
     const res = await api.post("/messages/group", payload, {
       withCredentials: true,

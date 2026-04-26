@@ -36,8 +36,16 @@ const messageSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["text", "image", "video", "file", "audio", "location", "meeting"],
+      enum: ["text", "image", "video", "file", "audio", "location", "meeting", "code_action", "document", "note"],
       default: "text",
+    },
+    metadata: {
+      toolName: { type: String, default: null },
+      link: { type: String, default: null }
+    },
+    isImportant: {
+      type: Boolean,
+      default: false,
     },
     deletedFor: [
       {

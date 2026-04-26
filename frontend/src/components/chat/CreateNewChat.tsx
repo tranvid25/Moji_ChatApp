@@ -21,7 +21,7 @@ const CreateNewChat = () => {
               <div className="size-8 bg-gradient-chat rounded-full flex items-center justify-center group-hover:scale-110 transition-bounce">
                 <MessageCircle className="size-4 text-white" />
               </div>
-              <span className="text-sm font-medium capitalize">gửi tin nhắn mới</span>
+              <span className="text-sm font-medium capitalize cursor-pointer">gửi tin nhắn mới</span>
             </div>
           </DialogTrigger>
 

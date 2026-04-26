@@ -47,7 +47,12 @@ export interface Message {
   imgUrl?: string | null;
   fileUrl?: string | null;
   fileName?: string | null;
-  type?: "text" | "image" | "video" | "file" | "audio" | "location" | "meeting";
+  type?: "text" | "image" | "video" | "file" | "audio" | "location" | "meeting" | "code_action" | "document" | "note";
+  metadata?: {
+    toolName?: string;
+    link?: string;
+  };
+  isImportant?: boolean;
   replyTo?: Message | null;
   updatedAt?: string | null;
   createdAt: string;

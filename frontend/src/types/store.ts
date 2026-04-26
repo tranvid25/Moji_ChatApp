@@ -57,6 +57,8 @@ export interface ChatState {
     imageFile?: File,
     type?: string,
     replyToId?: string,
+    metadata?: { toolName?: string; link?: string },
+    isImportant?: boolean
   ) => Promise<void>;
   sendGroupMessage: (
     conversationId: string,
@@ -66,6 +68,8 @@ export interface ChatState {
     imageFile?: File,
     type?: string,
     replyToId?: string,
+    metadata?: { toolName?: string; link?: string },
+    isImportant?: boolean
   ) => Promise<void>;
   //add message
   addMessage: (message: Message) => Promise<void>;

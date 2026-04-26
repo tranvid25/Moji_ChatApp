@@ -213,7 +213,7 @@ const GroupCall = () => {
               <PhoneOff className="size-10 text-destructive" />
            </div>
            <h3 className="text-xl font-medium">Cuộc gọi đã kết thúc</h3>
-           <p className="text-white/50">Cảm ơn bạn đã sử dụng Moji Group Call</p>
+           <p className="text-white/50">Cảm ơn bạn đã sử dụng TVChat Group Call</p>
         </div>
       )}
     </div>

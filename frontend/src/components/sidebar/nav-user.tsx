@@ -40,10 +40,10 @@ export function NavUser({ user }: { user: User }) {
       <SidebarMenu>
         <SidebarMenuItem>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+            <DropdownMenuTrigger asChild className="w-full cursor-pointer">
               <SidebarMenuButton
                 size="lg"
-                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-primary-foreground"
+                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-primary-foreground cursor-pointer"
               >
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={user.avatarUrl} alt={user.displayName} />
@@ -91,11 +91,11 @@ export function NavUser({ user }: { user: User }) {
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
-                <DropdownMenuItem onClick={() => setProfileOpen(true)}>
+                <DropdownMenuItem onClick={() => setProfileOpen(true)} className="cursor-pointer">
                   <UserIcon className="text-muted-foreground dark:group-focus:!text-accent-foreground" />
                   Tài Khoản
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setFriendRequestOpen(true)}>
+                <DropdownMenuItem onClick={() => setFriendRequestOpen(true)} className="cursor-pointer">
                   <BellIcon className="text-muted-foreground dark:group-focus:!text-accent-foreground" />
                   Thông Báo
                 </DropdownMenuItem>

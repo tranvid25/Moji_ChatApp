@@ -24,10 +24,19 @@ const saveFileLocally = (buffer, originalname) => {
 
 export const sendDirectMessage = async (req, res) => {
   try {
-    const { recipientId, content, conversationId, imgUrl, replyTo } = req.body;
+    const { recipientId, content, conversationId, imgUrl, replyTo, metadata, isImportant } = req.body;
     const senderId = req.user._id;
     const file = req.file;
     let conversation = null;
+    let parsedMetadata = null;
+    let parsedIsImportant = false;
+    
+    try {
+      if (metadata) parsedMetadata = typeof metadata === 'string' ? JSON.parse(metadata) : metadata;
+      if (isImportant) parsedIsImportant = typeof isImportant === 'string' ? isImportant === 'true' : isImportant;
+    } catch (e) {
+      console.log("Error parsing metadata/isImportant", e);
+    }
 
     if (!content && !imgUrl && !file) {
       return res
@@ -102,6 +111,8 @@ export const sendDirectMessage = async (req, res) => {
       fileSize,
       type: msgType,
       replyTo: replyTo || null,
+      metadata: parsedMetadata || null,
+      isImportant: parsedIsImportant || false,
     });
     
     if (message.replyTo) {
@@ -122,10 +133,19 @@ export const sendDirectMessage = async (req, res) => {
 };
 export const sendGroupMessage = async (req, res) => {
   try {
-    const { conversationId, content, replyTo } = req.body;
+    const { conversationId, content, replyTo, metadata, isImportant } = req.body;
     const senderId = req.user._id;
     const conversation = req.conversation;
     const file = req.file;
+
+    let parsedMetadata = null;
+    let parsedIsImportant = false;
+    try {
+      if (metadata) parsedMetadata = typeof metadata === 'string' ? JSON.parse(metadata) : metadata;
+      if (isImportant) parsedIsImportant = typeof isImportant === 'string' ? isImportant === 'true' : isImportant;
+    } catch (e) {
+      console.log("Error parsing metadata/isImportant", e);
+    }
 
     if (!content && !file) {
       return res
@@ -172,6 +192,8 @@ export const sendGroupMessage = async (req, res) => {
       fileSize,
       type: msgType,
       replyTo: replyTo || null,
+      metadata: parsedMetadata || null,
+      isImportant: parsedIsImportant || false,
     });
 
     if (message.replyTo) {

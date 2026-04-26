@@ -77,7 +77,7 @@ export const useChatStore = create<ChatState>()(
           set({ messageLoading: false });
         }
       },
-      sendDirectMessage: async (recipientId, content, imgUrl, imageFile, type, replyToId) => {
+      sendDirectMessage: async (recipientId, content, imgUrl, imageFile, type, replyToId, metadata, isImportant) => {
         const { activeConversationId, replyingToMessage } = get();
         const { user } = useAuthStore.getState();
         if (!user) return;
@@ -95,6 +95,8 @@ export const useChatStore = create<ChatState>()(
           fileName: imageFile && !fileIsImage ? imageFile.name : null,
           type: type ? (type as any) : (imageFile && !fileIsImage ? (imageFile.type.startsWith("audio/") ? "audio" : "file") : (imageFile ? "image" : "text")),
           replyTo: replyingToMessage,
+          metadata: metadata,
+          isImportant: isImportant,
           createdAt: new Date().toISOString(),
           isOwn: true,
           isSending: true,
@@ -129,7 +131,9 @@ export const useChatStore = create<ChatState>()(
             activeConversationId || undefined,
             imageFile,
             type,
-            effectiveReplyToId
+            effectiveReplyToId,
+            metadata,
+            isImportant
           );
 
           set((state) => {
@@ -185,10 +189,13 @@ export const useChatStore = create<ChatState>()(
         allowBlockedGroupMessage,
         imageFile,
         type,
-        replyToId
+        replyToId,
+        metadata,
+        isImportant
       ) => {
-        const { user, replyingToMessage } = get();
-        if (!user) return; // useAuthStore.getState().user is more reliable here but anyway
+        const { replyingToMessage } = get();
+        const { user } = useAuthStore.getState();
+        if (!user) return;
 
         const effectiveReplyToId = replyToId || replyingToMessage?._id;
         const tempId = `temp-${Date.now()}`;
@@ -203,6 +210,8 @@ export const useChatStore = create<ChatState>()(
           fileName: imageFile && !fileIsImage ? imageFile.name : null,
           type: type ? (type as any) : (imageFile && !fileIsImage ? (imageFile.type.startsWith("audio/") ? "audio" : "file") : (imageFile ? "image" : "text")),
           replyTo: replyingToMessage,
+          metadata: metadata,
+          isImportant: isImportant,
           createdAt: new Date().toISOString(),
           isOwn: true,
           isSending: true,
@@ -234,7 +243,9 @@ export const useChatStore = create<ChatState>()(
             allowBlockedGroupMessage,
             imageFile,
             type,
-            effectiveReplyToId
+            effectiveReplyToId,
+            metadata,
+            isImportant
           );
 
           set((state) => {

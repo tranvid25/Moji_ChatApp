@@ -24,7 +24,7 @@ export const sendReminderEmail = async (toEmail, toName, title, startTime) => {
         </body>
       </html>
     `;
-    sendSmtpEmail.sender = { "name": "Moji Chat", "email": process.env.BREVO_SENDER_EMAIL || "noreply@mojichat.com" };
+    sendSmtpEmail.sender = { "name": "TVChat", "email": process.env.BREVO_SENDER_EMAIL || "noreply@tvchat.com" };
     sendSmtpEmail.to = [
       { "email": toEmail, "name": toName }
     ];

@@ -13,6 +13,7 @@ import GroupBlockedConfirmDialog from "./GroupBlockedConfirmDialog";
 import { compressImageToWebP } from "@/lib/imageUtils";
 import AppointmentDialog from "./AppointmentDialog";
 import { Reply, X as CloseIcon } from "lucide-react";
+import ActionMenu from "./ActionMenu";
 
 const MessageInput = ({ selectedConvo }: { selectedConvo: Conversation }) => {
   const { user } = useAuthStore();
@@ -382,15 +383,7 @@ const MessageInput = ({ selectedConvo }: { selectedConvo: Conversation }) => {
           >
             <MapPin className="size-4" />
           </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="hover:bg-primary/10 transition-smooth hidden sm:inline-flex"
-            onClick={() => setShowAppointmentDialog(true)}
-            title="Tạo lịch hẹn"
-          >
-            <CalendarPlus className="size-4" />
-          </Button>
+          <ActionMenu selectedConvo={selectedConvo} />
           <div className="flex-1 relative ml-1">
             <Input
               onKeyPress={handleKeyPress}

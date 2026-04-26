@@ -11,6 +11,7 @@ import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import L from "leaflet";
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
+import ActionMenu from "./ActionMenu";
 
 // Fix default icon issue
 let DefaultIcon = L.icon({
@@ -54,12 +55,15 @@ const MessageItem = ({
       new Date(prev?.createdAt || 0).getTime() >
       1000 * 60 * 5;
   const isGroupBreak = isShowTime || message.senderId !== prev?.senderId;
-  const hasTextBubble = Boolean(message.content?.trim()) && message.type !== "location" && message.type !== "meeting";
+  const hasTextBubble = Boolean(message.content?.trim()) && message.type !== "location" && message.type !== "meeting" && message.type !== "code_action" && message.type !== "document" && message.type !== "note";
   const hasImage = Boolean(message.imgUrl) && message.type !== "file" && message.type !== "audio";
   const isFile = message.type === "file" || Boolean(message.fileUrl && message.type !== "audio");
   const isAudio = message.type === "audio";
   const isLocation = message.type === "location";
   const isMeeting = message.type === "meeting";
+  const isCodeAction = message.type === "code_action";
+  const isDocument = message.type === "document";
+  const isNote = message.type === "note";
   
   const getFileIcon = (fileName?: string | null) => {
     if (!fileName) return <FileIcon className="size-5" />;
@@ -100,7 +104,7 @@ const MessageItem = ({
             {isGroupBreak ? (
               <UserAvatar
                 type="chat"
-                name={participant?.displayName ?? "Moji"}
+                name={participant?.displayName ?? "TVChat"}
                 avatarUrl={participant?.avatarUrl ?? undefined}
               />
             ) : (
@@ -267,6 +271,74 @@ const MessageItem = ({
             </Card>
           )}
 
+          {isCodeAction && (
+            <Card className="rounded-2xl p-4 border-border/50 bg-card shadow-sm w-64 max-w-full flex flex-col items-center gap-3">
+               <div className="size-10 flex items-center justify-center bg-muted/50 rounded-lg p-1.5">
+                 {message.metadata?.toolName === 'Visual Studio Code' ? (
+                    <img src="/visual-studio-code.svg" className="w-full h-full object-contain" />
+                 ) : message.metadata?.toolName === 'Cursor' ? (
+                    <img src="/cursor.svg" className="w-full h-full object-contain" />
+                 ) : message.metadata?.toolName === 'Antigravity' ? (
+                    <img src="/google-antigravity.svg" className="w-full h-full object-contain" />
+                 ) : (
+                    <FileIcon className="size-6 text-primary" />
+                 )}
+               </div>
+               <div className="flex flex-col items-center gap-1 w-full text-center">
+                 <span className="font-semibold text-foreground text-sm uppercase tracking-wide">Mở Code Tool</span>
+                 <p className="text-xs text-muted-foreground w-full truncate" title={message.content!}>{message.content}</p>
+               </div>
+               {message.metadata?.link && (
+                 <Button 
+                  onClick={() => window.open(message.metadata!.link, "_blank")} 
+                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 mt-1 transition-smooth"
+                 >
+                   Mở {message.metadata.toolName}
+                 </Button>
+               )}
+            </Card>
+          )}
+
+          {isDocument && (
+            <Card className="rounded-2xl p-4 border-border/50 bg-card w-64 max-w-full shadow-sm">
+                <div className="flex items-center gap-3 mb-3">
+                   <img src="/google-drive.svg" alt="Drive" className="w-8 h-8 object-contain shrink-0" />
+                   <div className="flex flex-col overflow-hidden">
+                      <span className="text-sm font-semibold text-foreground truncate">Tài liệu team</span>
+                      <span className="text-xs text-muted-foreground truncate" title={message.content!}>{message.content}</span>
+                   </div>
+                </div>
+                {message.metadata?.link && (
+                  <Button 
+                   size="sm"
+                   variant="outline"
+                   onClick={() => window.open(message.metadata!.link, "_blank")} 
+                   className="w-full"
+                  >
+                    Open Google Drive
+                  </Button>
+                )}
+            </Card>
+          )}
+
+          {isNote && (
+            <Card className={cn(
+              "max-w-[85%] sm:max-w-xs lg:max-w-md rounded-2xl px-4 py-3 shadow-md border-l-4",
+              message.isImportant ? "bg-amber-50 dark:bg-amber-950/40 border-amber-500" : "bg-muted border-primary/50"
+            )}>
+              <div className="flex items-center gap-1.5 mb-1.5">
+                 <FileText className={cn("size-3.5", message.isImportant ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground")} />
+                 <span className={cn("text-xs font-bold uppercase", message.isImportant ? "text-amber-600 dark:text-amber-400" : "text-muted-foreground")}>
+                   Ghi chú nội bộ
+                 </span>
+              </div>
+              <p className={cn("whitespace-pre-wrap wrap-break-word text-sm leading-relaxed", message.isImportant ? "text-amber-900 dark:text-amber-100" : "text-foreground")}>
+                {message.content}
+              </p>
+            </Card>
+          )}
+
+
           {message.isOwn &&
             !message.isSending &&
             message._id === selectedConvo.lastMessage?._id && (
@@ -286,8 +358,8 @@ const MessageItem = ({
 
         {/* Reply Action Button */}
         <div className={cn(
-          "opacity-0 group-hover:opacity-100 transition-opacity flex items-center mb-1",
-          message.isOwn ? "order-first mr-1" : "ml-1"
+          "opacity-0 group-hover:opacity-100 transition-opacity flex items-center mb-1 gap-0.5",
+          message.isOwn ? "order-first mr-1 flex-row-reverse" : "ml-1"
         )}>
           <Button
             variant="ghost"
@@ -298,6 +370,18 @@ const MessageItem = ({
           >
             <Reply className="size-4" />
           </Button>
+          
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 rounded-full hover:bg-muted text-primary"
+            onClick={() => window.open("https://meet.google.com/new", "_blank")}
+            title="Họp nhanh"
+          >
+            <span role="img" aria-label="call" className="text-sm">📞</span>
+          </Button>
+
+          <ActionMenu selectedConvo={selectedConvo} />
         </div>
       </div>
     </div>
