@@ -9,6 +9,7 @@ import { useChatStore } from "@/stores/useChatStore";
 import { useUserStore } from "@/stores/useUserStore";
 import { toast } from "sonner";
 import GroupBlockedConfirmDialog from "./GroupBlockedConfirmDialog";
+import { compressImageToWebP } from "@/lib/imageUtils";
 
 const MessageInput = ({ selectedConvo }: { selectedConvo: Conversation }) => {
   const { user } = useAuthStore();
@@ -17,6 +18,7 @@ const MessageInput = ({ selectedConvo }: { selectedConvo: Conversation }) => {
   const [pendingGroupMessage, setPendingGroupMessage] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isSending, setIsSending] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { sendDirectMessage, sendGroupMessage } = useChatStore();
   const { leaveGroupConversation } = useUserStore();
@@ -45,13 +47,29 @@ const MessageInput = ({ selectedConvo }: { selectedConvo: Conversation }) => {
   };
 
   const handleContinueGroupMessage = async () => {
+    let finalImageFile = imageFile;
+    if (imageFile) {
+      try {
+        const blob = await compressImageToWebP(imageFile);
+        finalImageFile = new File(
+          [blob],
+          imageFile.name.replace(/\.[^/.]+$/, "") + ".webp",
+          {
+            type: "image/webp",
+          },
+        );
+      } catch (compressionError) {
+        console.error("Compression failed, using original file", compressionError);
+      }
+    }
+
     try {
       await sendGroupMessage(
         selectedConvo._id,
         pendingGroupMessage,
         undefined,
         true,
-        imageFile ?? undefined,
+        finalImageFile ?? undefined,
       );
       setPendingGroupMessage("");
       setShowBlockedDialog(false);
@@ -80,11 +98,28 @@ const MessageInput = ({ selectedConvo }: { selectedConvo: Conversation }) => {
   };
 
   const sendMessage = async () => {
-    if (!value.trim() && !imageFile) return;
+    if ((!value.trim() && !imageFile) || isSending) return;
     const currValue = value;
     setValue("");
+    setIsSending(true);
 
     try {
+      let finalImageFile = imageFile;
+      if (imageFile) {
+        try {
+          const blob = await compressImageToWebP(imageFile);
+          finalImageFile = new File(
+            [blob],
+            imageFile.name.replace(/\.[^/.]+$/, "") + ".webp",
+            {
+              type: "image/webp",
+            },
+          );
+        } catch (compressionError) {
+          console.error("Compression failed, using original file", compressionError);
+        }
+      }
+
       if (selectedConvo.type === "direct") {
         const participants = selectedConvo.participants;
         const otherUser = participants.filter((p) => p._id !== user._id)[0];
@@ -92,7 +127,7 @@ const MessageInput = ({ selectedConvo }: { selectedConvo: Conversation }) => {
           otherUser._id,
           currValue,
           undefined,
-          imageFile ?? undefined,
+          finalImageFile ?? undefined,
         );
         resetPickedImage();
         return;
@@ -103,7 +138,7 @@ const MessageInput = ({ selectedConvo }: { selectedConvo: Conversation }) => {
         currValue,
         undefined,
         undefined,
-        imageFile ?? undefined,
+        finalImageFile ?? undefined,
       );
       resetPickedImage();
     } catch (error: any) {
@@ -123,6 +158,8 @@ const MessageInput = ({ selectedConvo }: { selectedConvo: Conversation }) => {
       console.error(error);
       toast.error("Lỗi xảy ra khi gửi tin nhắn. Bạn hãy thử lại!");
       setValue(currValue);
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -200,7 +237,7 @@ const MessageInput = ({ selectedConvo }: { selectedConvo: Conversation }) => {
           <Button
             onClick={sendMessage}
             className="bg-gradient-chat hover:shadow-glow transition-smooth hover:scale-105"
-            disabled={!value.trim() && !imageFile}
+            disabled={(!value.trim() && !imageFile) || isSending}
           >
             <Send className="size-4 text-white" />
           </Button>

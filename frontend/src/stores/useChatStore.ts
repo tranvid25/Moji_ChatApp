@@ -76,21 +76,92 @@ export const useChatStore = create<ChatState>()(
         }
       },
       sendDirectMessage: async (recipientId, content, imgUrl, imageFile) => {
+        const { activeConversationId } = get();
+        const { user } = useAuthStore.getState();
+        if (!user) return;
+
+        const tempId = `temp-${Date.now()}`;
+        const optimisticMessage: Message = {
+          _id: tempId,
+          conversationId: activeConversationId || "temp-convo",
+          senderId: user._id,
+          content: content || null,
+          imgUrl: imageFile ? URL.createObjectURL(imageFile) : imgUrl || null,
+          createdAt: new Date().toISOString(),
+          isOwn: true,
+          isSending: true,
+        };
+
+        const convoId = activeConversationId;
+        if (convoId) {
+          set((state) => {
+            const currentConvoMessages = state.messages[convoId] || {
+              items: [],
+              hasMore: false,
+            };
+            return {
+              messages: {
+                ...state.messages,
+                [convoId]: {
+                  ...currentConvoMessages,
+                  items: [...currentConvoMessages.items, optimisticMessage],
+                },
+              },
+            };
+          });
+        }
+
         try {
-          const { activeConversationId } = get();
-          await chatService.sendDirectMessage(
+          const message = await chatService.sendDirectMessage(
             recipientId,
             content,
             imgUrl,
             activeConversationId || undefined,
             imageFile,
           );
-          set((state) => ({
-            conversations: state.conversations.map((c) =>
-              c._id === activeConversationId ? { ...c, seenBy: [] } : c,
-            ),
-          }));
+
+          set((state) => {
+            const finalConvoId = message.conversationId;
+            const currentConvoMessages = state.messages[finalConvoId] || {
+              items: [],
+              hasMore: false,
+            };
+
+            // If we were in a temp convo (new chat), we might need to update the key
+            const newMessages = { ...state.messages };
+            if (convoId && convoId !== finalConvoId) {
+              delete newMessages[convoId];
+            }
+
+            return {
+              messages: {
+                ...newMessages,
+                [finalConvoId]: {
+                  ...currentConvoMessages,
+                  items: currentConvoMessages.items.map((m) =>
+                    m._id === tempId ? { ...message, isOwn: true } : m,
+                  ),
+                },
+              },
+              conversations: state.conversations.map((c) =>
+                c._id === finalConvoId ? { ...c, seenBy: [] } : c,
+              ),
+            };
+          });
         } catch (error) {
+          if (convoId) {
+            set((state) => ({
+              messages: {
+                ...state.messages,
+                [convoId]: {
+                  ...state.messages[convoId],
+                  items: state.messages[convoId].items.filter(
+                    (m) => m._id !== tempId,
+                  ),
+                },
+              },
+            }));
+          }
           console.error("Lỗi xảy ra khi gửi tin nhắn", error);
           throw error;
         }
@@ -102,20 +173,78 @@ export const useChatStore = create<ChatState>()(
         allowBlockedGroupMessage,
         imageFile,
       ) => {
+        const { user } = useAuthStore.getState();
+        if (!user) return;
+
+        const tempId = `temp-${Date.now()}`;
+        const optimisticMessage: Message = {
+          _id: tempId,
+          conversationId: conversationId,
+          senderId: user._id,
+          content: content || null,
+          imgUrl: imageFile ? URL.createObjectURL(imageFile) : imgUrl || null,
+          createdAt: new Date().toISOString(),
+          isOwn: true,
+          isSending: true,
+        };
+
+        set((state) => {
+          const currentConvoMessages = state.messages[conversationId] || {
+            items: [],
+            hasMore: false,
+          };
+          return {
+            messages: {
+              ...state.messages,
+              [conversationId]: {
+                ...currentConvoMessages,
+                items: [...currentConvoMessages.items, optimisticMessage],
+              },
+            },
+          };
+        });
+
         try {
-          await chatService.sendGroupMessage(
+          const message = await chatService.sendGroupMessage(
             conversationId,
             content,
             imgUrl,
             allowBlockedGroupMessage,
             imageFile,
           );
-          set((state) => ({
-            conversations: state.conversations.map((c) =>
-              c._id === get().activeConversationId ? { ...c, seenBy: [] } : c,
-            ),
-          }));
+
+          set((state) => {
+            const currentConvoMessages = state.messages[conversationId] || {
+              items: [],
+              hasMore: false,
+            };
+            return {
+              messages: {
+                ...state.messages,
+                [conversationId]: {
+                  ...currentConvoMessages,
+                  items: currentConvoMessages.items.map((m) =>
+                    m._id === tempId ? { ...message, isOwn: true } : m,
+                  ),
+                },
+              },
+              conversations: state.conversations.map((c) =>
+                c._id === get().activeConversationId ? { ...c, seenBy: [] } : c,
+              ),
+            };
+          });
         } catch (error) {
+          set((state) => ({
+            messages: {
+              ...state.messages,
+              [conversationId]: {
+                ...state.messages[conversationId],
+                items: state.messages[conversationId].items.filter(
+                  (m) => m._id !== tempId,
+                ),
+              },
+            },
+          }));
           console.error("Lỗi xảy ra khi gửi tin nhắn group", error);
           throw error;
         }
@@ -132,14 +261,43 @@ export const useChatStore = create<ChatState>()(
             prevItems = get().messages[convoId]?.items ?? [];
           }
           set((state) => {
-            if (prevItems.some((m) => m._id === message._id)) return state;
+            const currentConvo = state.messages[convoId];
+            const currentItems = currentConvo?.items ?? [];
+
+            if (currentItems.some((m) => m._id === message._id)) return state;
+
+            // Optimistic deduplication:
+            // Find a message that is currently sending, has same sender, and same content
+            const optimisticIndex = currentItems.findIndex(
+              (m) =>
+                m.isSending &&
+                m.senderId === message.senderId &&
+                m.content === message.content &&
+                !!m.imgUrl === !!message.imgUrl,
+            );
+
+            if (optimisticIndex !== -1) {
+              const newItems = [...currentItems];
+              newItems[optimisticIndex] = message;
+              return {
+                messages: {
+                  ...state.messages,
+                  [convoId]: {
+                    ...currentConvo,
+                    items: newItems,
+                  },
+                },
+              };
+            }
+
             return {
               messages: {
                 ...state.messages,
                 [convoId]: {
-                  items: [...prevItems, message],
-                  hasMore: state.messages[convoId]?.hasMore,
-                  nextCursor: state.messages[convoId]?.nextCursor ?? undefined,
+                  ...currentConvo,
+                  items: [...currentItems, message],
+                  hasMore: currentConvo?.hasMore ?? false,
+                  nextCursor: currentConvo?.nextCursor ?? undefined,
                 },
               },
             };

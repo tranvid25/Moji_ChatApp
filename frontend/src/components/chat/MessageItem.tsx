@@ -71,44 +71,69 @@ const MessageItem = ({
           )}
         >
           {hasImage && (
-            <div className="w-fit max-w-full overflow-hidden rounded-2xl border border-border/40 bg-background shadow-sm">
+            <div
+              className={cn(
+                "w-fit max-w-full overflow-hidden rounded-2xl border border-border/40 bg-background shadow-sm relative",
+                message.isSending && "opacity-70",
+              )}
+            >
               <img
                 src={message.imgUrl || ""}
                 alt="image-message"
                 className="max-h-[360px] w-auto max-w-[280px] object-cover sm:max-w-[340px]"
                 loading="lazy"
               />
+              {message.isSending && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/10 backdrop-blur-[1px]">
+                  <div className="flex flex-col items-center gap-1">
+                    <div className="size-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                    <span className="text-[10px] font-medium text-white drop-shadow-md">
+                      Đang gửi..
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
           {hasText && (
-            <Card
-              className={cn(
-                "w-fit max-w-full rounded-2xl px-3 py-2.5 shadow-sm transition-shadow",
-                message.isOwn
-                  ? "chat-bubble-sent border-0"
-                  : "bg-chat-bubble-received border border-primary/25",
-              )}
-            >
-              <p className="whitespace-pre-wrap wrap-break-word text-sm leading-relaxed">
-                {message.content}
-              </p>
-            </Card>
+            <div className="flex flex-col items-end gap-1">
+              <Card
+                className={cn(
+                  "w-fit max-w-full rounded-2xl px-3 py-2.5 shadow-sm transition-shadow",
+                  message.isOwn
+                    ? "chat-bubble-sent border-0"
+                    : "bg-chat-bubble-received border border-primary/25",
+                  message.isSending && "opacity-70",
+                )}
+              >
+                <p className="whitespace-pre-wrap wrap-break-word text-sm leading-relaxed">
+                  {message.content}
+                </p>
+              </Card>
+              {/* {message.isSending && (
+                <span className="text-[10px] text-muted-foreground mr-1">
+                  Đang gửi...
+                </span>
+              )} */}
+            </div>
           )}
 
-          {message.isOwn && message._id === selectedConvo.lastMessage?._id && (
-            <Badge
-              variant="outline"
-              className={cn(
-                "h-4 border-0 px-1.5 py-0.5 text-[11px] capitalize",
-                lastMessageStatus === "seen"
-                  ? "bg-primary/20 text-primary"
-                  : "bg-muted text-muted-foreground",
-              )}
-            >
-              {lastMessageStatus}
-            </Badge>
-          )}
+          {message.isOwn &&
+            !message.isSending &&
+            message._id === selectedConvo.lastMessage?._id && (
+              <Badge
+                variant="outline"
+                className={cn(
+                  "h-4 border-0 px-1.5 py-0.5 text-[11px] capitalize",
+                  lastMessageStatus === "seen"
+                    ? "bg-primary/20 text-primary"
+                    : "bg-muted text-muted-foreground",
+                )}
+              >
+                {lastMessageStatus}
+              </Badge>
+            )}
         </div>
       </div>
     </div>
