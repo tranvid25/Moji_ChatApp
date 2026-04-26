@@ -9,6 +9,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuthStore } from "@/stores/useAuthStores";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
+import { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 const signUpSchema = z.object({
   firstname: z.string().min(1, "Tên bắt buộc phải có"),
   lastname: z.string().min(1, "Họ bắt buộc phải có"),
@@ -23,6 +25,7 @@ export function SignupForm({
 }: React.ComponentProps<"div">) {
   const { signUp } = useAuthStore();
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = useState(false);
   const {
     register,
     handleSubmit,
@@ -41,8 +44,15 @@ export function SignupForm({
         email,
         password,
       );
+
+      if (response) {
+        toast.success(response?.message || "Đăng ký thành công");
+        navigate("/signin");
+      }
     } catch (error: any) {
-      toast.error(error.message || "Đăng ký thất bại");
+      const message =
+        error?.response?.data?.message || error?.message || "Đăng ký thất bại";
+      toast.error(message);
     }
   };
   return (
@@ -55,7 +65,7 @@ export function SignupForm({
                 <a href="/" className="mx-auto block w-fit text-center">
                   <img src="/logo.svg" alt="logo" />
                 </a>
-                <h1 className="text-2xl font-bold">Tạo tài khoản Moji</h1>
+                <h1 className="text-2xl font-bold">Tạo tài khoản TVChat</h1>
                 <p className="text-muted-foreground text-balance">
                   Chào mừng bạn! Hãy đăng ký để bắt đầu!
                 </p>
@@ -68,7 +78,7 @@ export function SignupForm({
                   <Input type="text" id="lastname" {...register("lastname")} />
 
                   {errors.lastname && (
-                    <p className="text-destructive text-sm">
+                    <p className="error-message">
                       {errors.lastname.message}
                     </p>
                   )}
@@ -83,7 +93,7 @@ export function SignupForm({
                     {...register("firstname")}
                   />
                   {errors.firstname && (
-                    <p className="text-destructive text-sm">
+                    <p className="error-message">
                       {errors.firstname.message}
                     </p>
                   )}
@@ -96,12 +106,12 @@ export function SignupForm({
                 <Input
                   type="text"
                   id="username"
-                  placeholder="moji"
+                  placeholder="Tên đăng nhập"
                   {...register("username")}
                 />
 
                 {errors.username && (
-                  <p className="text-destructive text-sm">
+                  <p className="error-message">
                     {errors.username.message}
                   </p>
                 )}
@@ -117,7 +127,7 @@ export function SignupForm({
                   {...register("email")}
                 />
                 {errors.email && (
-                  <p className="text-destructive text-sm">
+                  <p className="error-message">
                     {errors.email.message}
                   </p>
                 )}
@@ -126,13 +136,27 @@ export function SignupForm({
                 <Label htmlFor="password" className="block text-sm">
                   Mật Khẩu
                 </Label>
-                <Input
-                  type="password"
-                  id="password"
-                  {...register("password")}
-                />
+                <div className="relative">
+                  <Input
+                    type={showPassword ? "text" : "password"}
+                    id="password"
+                    {...register("password")}
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground focus:outline-none"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
                 {errors.password && (
-                  <p className="text-destructive text-sm">
+                  <p className="error-message">
                     {errors.password.message}
                   </p>
                 )}

@@ -210,7 +210,7 @@
   }
 
   body {
-    @apply text-slate-800 dark:text-slate-200;
+    @apply text-slate-800 dark:text-slate-200 bg-background;
   }
 }
 
@@ -236,7 +236,12 @@
   .chat-bubble-received {
     @apply bg-[hsl(var(--chat-bubble-received))] text-[hsl(var(--chat-bubble-received-foreground))] border border-border/50;
   }
-
+  .error-message{
+    @apply text-sm text-destructive;
+  }
+  .success-message{
+    @apply text-sm text-emerald-500;
+  }
   /* Status indicators */
   .status-online {
     @apply bg-[hsl(var(--online))] shadow-[0_0_8px_hsl(var(--online)/0.5)];
@@ -279,7 +284,10 @@
   .shadow-bubble {
     box-shadow: var(--shadow-bubble);
   }
-
+  /* scrollbar */
+  .beautiful-scrollbar {
+    @apply scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent dark:scrollbar-thumb-slate-600 ;
+  }
   /* Animations */
   .transition-bounce {
     transition: var(--transition-bounce);
@@ -312,6 +320,21 @@
     100% {
       opacity: 1;
       transform: translateY(0) scale(1);
+    }
+  }
+
+  .highlight-message {
+    animation: highlightFade 2s ease-out;
+  }
+
+  @keyframes highlightFade {
+    0% {
+      background-color: hsla(var(--primary) / 0.2);
+      box-shadow: inset 0 0 0 2px hsla(var(--primary) / 0.5);
+    }
+    100% {
+      background-color: transparent;
+      box-shadow: inset 0 0 0 0 transparent;
     }
   }
 }

@@ -5,7 +5,7 @@
   "main": "src/server.js",
   "scripts": {
     "dev": "nodemon src/server.js",
-    "start": "node/src/server.js",
+    "start": "node src/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "type": "module",
@@ -13,14 +13,22 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@sendinblue/client": "^3.3.1",
     "bcrypt": "^6.0.0",
+    "cloudinary": "^2.9.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "joi": "^18.1.2",
     "jsonwebtoken": "^9.0.3",
-    "mongoose": "^8.23.0"
+    "livekit-server-sdk": "^2.15.1",
+    "mongoose": "^8.23.0",
+    "multer": "^2.1.1",
+    "node-cron": "^4.2.1",
+    "nodemailer": "^8.0.6",
+    "socket.io": "^4.8.3",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"

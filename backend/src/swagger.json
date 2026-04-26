@@ -1,0 +1,195 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "TVChat",
+    "version": "1.0.0",
+    "description": ""
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5001/api"
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "summary": "Signup",
+        "responses": {},
+        "tags": ["auth"]
+      },
+      "post": {
+        "summary": "declineFriendRequest",
+        "responses": {},
+        "tags": ["friend"]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "signIn",
+        "responses": {},
+        "tags": ["auth"],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "username": {
+                    "type": "string"
+                  },
+                  "password": {
+                    "type": "string"
+                  }
+                }
+              },
+              "example": {
+                "username": "user2",
+                "password": "Lacga123@"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/friends/requests": {
+      "post": {
+        "summary": "sendFriendRequest",
+        "responses": {},
+        "tags": ["friend"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "to": {
+                    "type": "string"
+                  },
+                  "message": {
+                    "type": "string"
+                  }
+                }
+              },
+              "example": {
+                "to": "69e703eeb9c3efa018218ebc",
+                "message": "Hi chào bạn chấp nhận tớ nhé"
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "getAllFriendRequests",
+        "responses": {},
+        "tags": ["friend"]
+      }
+    },
+    "/friends/requests/69e705dab9c3efa018218ecb/accept": {
+      "post": {
+        "summary": "acceptFriendRequest",
+        "responses": {},
+        "tags": ["friend"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ]
+      }
+    },
+    "/messages/direct": {
+      "post": {
+        "summary": "messageDirect",
+        "responses": {},
+        "tags": ["message"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "recipientId": {
+                    "type": "string"
+                  },
+                  "content": {
+                    "type": "string"
+                  }
+                }
+              },
+              "example": {
+                "recipientId": "69e214a79014a0744cbe6dc5",
+                "content": "Test tin nhắn version 1"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/conversations/": {
+      "post": {
+        "summary": "createConversationGroup",
+        "responses": {},
+        "tags": ["Conversation"],
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "memberIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "example": {
+                "type": "group",
+                "name": "Hội đồng quản trị",
+                "memberIds": [
+                  "69e214a79014a0744cbe6dc5",
+                  "69e7061db9c3efa018218ece"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "security": [
+    {
+      "BearerAuth": []
+    }
+  ]
+}
