@@ -3,7 +3,9 @@ import type { Conversation, Message, Participant } from "@/types/chat";
 import UserAvatar from "./UserAvatar";
 import { Card } from "../ui/card";
 import { Badge } from "../ui/badge";
-import { FileIcon, Download, FileText, Music, MapPin } from "lucide-react";
+import { Button } from "../ui/button";
+import { FileIcon, Download, FileText, Music, MapPin, Video, Reply } from "lucide-react";
+import { useChatStore } from "@/stores/useChatStore";
 import "leaflet/dist/leaflet.css";
 import { MapContainer, TileLayer, Marker } from "react-leaflet";
 import L from "leaflet";
@@ -34,6 +36,17 @@ const MessageItem = ({
   selectedConvo,
   lastMessageStatus,
 }: MessageItemProps) => {
+   const { setReplyingToMessage } = useChatStore();
+   
+   const scrollToMessage = (messageId: string) => {
+     const element = document.getElementById(`message-${messageId}`);
+     if (element) {
+       element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+       element.classList.add('highlight-message');
+       setTimeout(() => element.classList.remove('highlight-message'), 2000);
+     }
+   };
+
   const prev = index + 1 < messages.length ? messages[index + 1] : undefined;
   const isShowTime =
     index === 0 ||
@@ -41,11 +54,12 @@ const MessageItem = ({
       new Date(prev?.createdAt || 0).getTime() >
       1000 * 60 * 5;
   const isGroupBreak = isShowTime || message.senderId !== prev?.senderId;
-  const hasText = Boolean(message.content?.trim());
+  const hasTextBubble = Boolean(message.content?.trim()) && message.type !== "location" && message.type !== "meeting";
   const hasImage = Boolean(message.imgUrl) && message.type !== "file" && message.type !== "audio";
   const isFile = message.type === "file" || Boolean(message.fileUrl && message.type !== "audio");
   const isAudio = message.type === "audio";
   const isLocation = message.type === "location";
+  const isMeeting = message.type === "meeting";
   
   const getFileIcon = (fileName?: string | null) => {
     if (!fileName) return <FileIcon className="size-5" />;
@@ -74,8 +88,9 @@ const MessageItem = ({
       )}
 
       <div
+        id={`message-${message._id}`}
         className={cn(
-          "flex w-full items-end gap-2 message-bounce",
+          "flex w-full items-end gap-2 group message-bounce",
           message.isOwn ? "justify-end" : "justify-start",
           !message.isOwn && isGroupBreak ? "mt-1" : "mt-0.5",
         )}
@@ -96,10 +111,27 @@ const MessageItem = ({
 
         <div
           className={cn(
-            "flex min-w-0 max-w-xs flex-col space-y-1 lg:max-w-md",
+            "flex min-w-0 max-w-[85%] flex-col space-y-1 sm:max-w-xs lg:max-w-md relative",
             message.isOwn ? "items-end" : "items-start",
           )}
         >
+          {message.replyTo && (
+            <div 
+              onClick={() => scrollToMessage(message.replyTo?._id || '')}
+              className={cn(
+                "mb-px px-3 py-1.5 rounded-t-2xl rounded-b-md bg-muted/40 border-l-4 border-primary/40 cursor-pointer hover:bg-muted/60 transition-colors max-w-full overflow-hidden",
+                message.isOwn ? "mr-1" : "ml-1"
+              )}
+            >
+              <div className="flex items-center gap-1.5 text-[10px] font-bold text-primary uppercase">
+                <Reply className="size-3" />
+                <span>Trả lời</span>
+              </div>
+              <p className="text-xs text-muted-foreground truncate italic">
+                {message.replyTo.content || '[Media]'}
+              </p>
+            </div>
+          )}
           {hasImage && (
             <div
               className={cn(
@@ -126,7 +158,7 @@ const MessageItem = ({
             </div>
           )}
 
-          {hasText && (
+          {hasTextBubble && (
             <div className="flex flex-col items-end gap-1">
               <Card
                 className={cn(
@@ -192,7 +224,7 @@ const MessageItem = ({
             </Card>
           )}
 
-          {isLocation && hasText && (
+          {isLocation && message.content && (
              <Card className="rounded-2xl p-2 border-border/50 bg-card w-[280px] max-w-full overflow-hidden shadow-sm">
                 <div className="flex items-center mb-2 px-1 text-primary">
                     <MapPin className="size-4 mr-1" />
@@ -217,6 +249,24 @@ const MessageItem = ({
              </Card>
           )}
 
+          {isMeeting && message.content && (
+            <Card className="rounded-2xl p-4 border-border/50 bg-chat-bubble-received border-primary/20 shadow-sm w-64 max-w-full flex flex-col items-center gap-3">
+               <div className="size-12 rounded-full bg-primary/10 flex items-center justify-center">
+                 <Video className="size-6 text-primary" />
+               </div>
+               <div className="flex flex-col items-center gap-1 w-full">
+                 <span className="font-semibold text-foreground text-sm uppercase tracking-wide">Họp nhóm</span>
+                 <p className="text-xs text-muted-foreground w-full text-center truncate italic">{message.content}</p>
+               </div>
+               <Button 
+                onClick={() => window.open(message.content!, "_blank")} 
+                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 mt-1 shadow-glow transition-smooth"
+               >
+                 Tham gia ngay
+               </Button>
+            </Card>
+          )}
+
           {message.isOwn &&
             !message.isSending &&
             message._id === selectedConvo.lastMessage?._id && (
@@ -232,6 +282,22 @@ const MessageItem = ({
                 {lastMessageStatus}
               </Badge>
             )}
+        </div>
+
+        {/* Reply Action Button */}
+        <div className={cn(
+          "opacity-0 group-hover:opacity-100 transition-opacity flex items-center mb-1",
+          message.isOwn ? "order-first mr-1" : "ml-1"
+        )}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="size-8 rounded-full hover:bg-muted text-muted-foreground"
+            onClick={() => setReplyingToMessage(message)}
+            title="Trả lời"
+          >
+            <Reply className="size-4" />
+          </Button>
         </div>
       </div>
     </div>

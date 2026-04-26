@@ -47,7 +47,8 @@ export interface Message {
   imgUrl?: string | null;
   fileUrl?: string | null;
   fileName?: string | null;
-  type?: "text" | "image" | "video" | "file" | "audio" | "location";
+  type?: "text" | "image" | "video" | "file" | "audio" | "location" | "meeting";
+  replyTo?: Message | null;
   updatedAt?: string | null;
   createdAt: string;
   isOwn?: boolean;

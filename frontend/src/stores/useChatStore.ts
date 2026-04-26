@@ -13,7 +13,9 @@ export const useChatStore = create<ChatState>()(
       convoLoading: false,
       messageLoading: false,
       loading: false,
+      replyingToMessage: null,
       setActiveConversation: (id) => set({ activeConversationId: id }),
+      setReplyingToMessage: (message) => set({ replyingToMessage: message }),
       reset: () =>
         set({
           conversations: [],
@@ -75,11 +77,12 @@ export const useChatStore = create<ChatState>()(
           set({ messageLoading: false });
         }
       },
-      sendDirectMessage: async (recipientId, content, imgUrl, imageFile, type) => {
-        const { activeConversationId } = get();
+      sendDirectMessage: async (recipientId, content, imgUrl, imageFile, type, replyToId) => {
+        const { activeConversationId, replyingToMessage } = get();
         const { user } = useAuthStore.getState();
         if (!user) return;
 
+        const effectiveReplyToId = replyToId || replyingToMessage?._id;
         const tempId = `temp-${Date.now()}`;
         const fileIsImage = imageFile?.type?.startsWith("image/");
         const optimisticMessage: Message = {
@@ -91,10 +94,13 @@ export const useChatStore = create<ChatState>()(
           fileUrl: imageFile && !fileIsImage ? "" : null,
           fileName: imageFile && !fileIsImage ? imageFile.name : null,
           type: type ? (type as any) : (imageFile && !fileIsImage ? (imageFile.type.startsWith("audio/") ? "audio" : "file") : (imageFile ? "image" : "text")),
+          replyTo: replyingToMessage,
           createdAt: new Date().toISOString(),
           isOwn: true,
           isSending: true,
         };
+
+        set({ replyingToMessage: null });
 
         const convoId = activeConversationId;
         if (convoId) {
@@ -122,7 +128,8 @@ export const useChatStore = create<ChatState>()(
             imgUrl,
             activeConversationId || undefined,
             imageFile,
-            type
+            type,
+            effectiveReplyToId
           );
 
           set((state) => {
@@ -177,11 +184,13 @@ export const useChatStore = create<ChatState>()(
         imgUrl,
         allowBlockedGroupMessage,
         imageFile,
-        type
+        type,
+        replyToId
       ) => {
-        const { user } = useAuthStore.getState();
-        if (!user) return;
+        const { user, replyingToMessage } = get();
+        if (!user) return; // useAuthStore.getState().user is more reliable here but anyway
 
+        const effectiveReplyToId = replyToId || replyingToMessage?._id;
         const tempId = `temp-${Date.now()}`;
         const fileIsImage = imageFile?.type?.startsWith("image/");
         const optimisticMessage: Message = {
@@ -193,10 +202,13 @@ export const useChatStore = create<ChatState>()(
           fileUrl: imageFile && !fileIsImage ? "" : null,
           fileName: imageFile && !fileIsImage ? imageFile.name : null,
           type: type ? (type as any) : (imageFile && !fileIsImage ? (imageFile.type.startsWith("audio/") ? "audio" : "file") : (imageFile ? "image" : "text")),
+          replyTo: replyingToMessage,
           createdAt: new Date().toISOString(),
           isOwn: true,
           isSending: true,
         };
+
+        set({ replyingToMessage: null });
 
         set((state) => {
           const currentConvoMessages = state.messages[conversationId] || {
@@ -222,6 +234,7 @@ export const useChatStore = create<ChatState>()(
             allowBlockedGroupMessage,
             imageFile,
             type,
+            effectiveReplyToId
           );
 
           set((state) => {

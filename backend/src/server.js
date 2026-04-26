@@ -12,11 +12,13 @@ import messageRoute from "./routes/messageRoute.js";
 import conversationRoute from "./routes/conversationRoute.js";
 import settingsRoute from "./routes/settingsRoute.js";
 import groupCallRoute from "./routes/groupCallRoute.js";
+import appointmentRoute from "./routes/appointmentRoute.js";
 import swaggerUi from "swagger-ui-express";
 import fs from "fs";
 import { io } from "./socket/index.js";
 import http from "http";
 import cloudinary from "cloudinary";
+import { startAppointmentCron } from "./cron/appointmentCron.js";
 dotenv.config();
 
 const app = express();
@@ -55,11 +57,13 @@ app.use("/api/messages", messageRoute);
 app.use("/api/conversations", conversationRoute);
 app.use("/api/settings", settingsRoute);
 app.use("/api/group-call", groupCallRoute);
+app.use("/api/appointments", appointmentRoute);
 
 // connect DB rồi mới start server
 connectDB()
   .then(() => {
     io.attach(server);
+    startAppointmentCron();
     server.listen(PORT, () => {
       console.log(`Server bắt đầu trên cổng ${PORT}`);
     });

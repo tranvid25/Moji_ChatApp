@@ -26,6 +26,7 @@ export const chatService = {
     conversationId?: string,
     imageFile?: File,
     type?: string,
+    replyToId?: string,
   ) {
     const payload = new FormData();
     payload.append("recipientId", recipientId);
@@ -34,6 +35,7 @@ export const chatService = {
     if (conversationId) payload.append("conversationId", conversationId);
     if (imageFile) payload.append("file", imageFile);
     if (type) payload.append("type", type);
+    if (replyToId) payload.append("replyTo", replyToId);
 
     const res = await api.post("/messages/direct", payload, {
       withCredentials: true,
@@ -48,6 +50,7 @@ export const chatService = {
     allowBlockedGroupMessage?: boolean,
     imageFile?: File,
     type?: string,
+    replyToId?: string,
   ) {
     const payload = new FormData();
     payload.append("conversationId", conversationId);
@@ -58,6 +61,7 @@ export const chatService = {
     }
     if (imageFile) payload.append("file", imageFile);
     if (type) payload.append("type", type);
+    if (replyToId) payload.append("replyTo", replyToId);
 
     const res = await api.post("/messages/group", payload, {
       withCredentials: true,

@@ -24,7 +24,7 @@ const saveFileLocally = (buffer, originalname) => {
 
 export const sendDirectMessage = async (req, res) => {
   try {
-    const { recipientId, content, conversationId, imgUrl } = req.body;
+    const { recipientId, content, conversationId, imgUrl, replyTo } = req.body;
     const senderId = req.user._id;
     const file = req.file;
     let conversation = null;
@@ -101,7 +101,12 @@ export const sendDirectMessage = async (req, res) => {
       fileName,
       fileSize,
       type: msgType,
+      replyTo: replyTo || null,
     });
+    
+    if (message.replyTo) {
+      await message.populate("replyTo");
+    }
     updateConversationAfterCreateMessage(conversation, senderId, message);
     await conversation.save();
     emitNewMessage(io, conversation, message);
@@ -117,7 +122,7 @@ export const sendDirectMessage = async (req, res) => {
 };
 export const sendGroupMessage = async (req, res) => {
   try {
-    const { conversationId, content } = req.body;
+    const { conversationId, content, replyTo } = req.body;
     const senderId = req.user._id;
     const conversation = req.conversation;
     const file = req.file;
@@ -166,7 +171,12 @@ export const sendGroupMessage = async (req, res) => {
       fileName,
       fileSize,
       type: msgType,
+      replyTo: replyTo || null,
     });
+
+    if (message.replyTo) {
+      await message.populate("replyTo");
+    }
     updateConversationAfterCreateMessage(conversation, senderId, message);
     await conversation.save();
     emitNewMessage(io, conversation, message);

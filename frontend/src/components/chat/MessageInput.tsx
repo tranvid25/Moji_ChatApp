@@ -1,7 +1,7 @@
 import { useAuthStore } from "@/stores/useAuthStores";
 import { useRef, useState, useEffect } from "react";
 import { Button } from "../ui/button";
-import { ImagePlus, Paperclip, Send, X, File as FileIcon, Mic, Square, MapPin, Music } from "lucide-react";
+import { ImagePlus, Paperclip, Send, X, File as FileIcon, Mic, Square, MapPin, Music, CalendarPlus } from "lucide-react";
 import { Input } from "../ui/input";
 import EmojiPicker from "./EmojiPicker";
 import { cn } from "@/lib/utils";
@@ -11,11 +11,14 @@ import { useUserStore } from "@/stores/useUserStore";
 import { toast } from "sonner";
 import GroupBlockedConfirmDialog from "./GroupBlockedConfirmDialog";
 import { compressImageToWebP } from "@/lib/imageUtils";
+import AppointmentDialog from "./AppointmentDialog";
+import { Reply, X as CloseIcon } from "lucide-react";
 
 const MessageInput = ({ selectedConvo }: { selectedConvo: Conversation }) => {
   const { user } = useAuthStore();
   const [value, setValue] = useState("");
   const [showBlockedDialog, setShowBlockedDialog] = useState(false);
+  const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
   const [pendingGroupMessage, setPendingGroupMessage] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -24,7 +27,7 @@ const MessageInput = ({ selectedConvo }: { selectedConvo: Conversation }) => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { sendDirectMessage, sendGroupMessage } = useChatStore();
+  const { sendDirectMessage, sendGroupMessage, replyingToMessage, setReplyingToMessage } = useChatStore();
   const { leaveGroupConversation } = useUserStore();
 
   if (!user) return;
@@ -202,6 +205,12 @@ const MessageInput = ({ selectedConvo }: { selectedConvo: Conversation }) => {
         }
       }
 
+      const meetRegex = /^https:\/\/meet\.google\.com\/[a-zA-Z0-9-]+[a-zA-Z0-9-?&=]*$/;
+      let messageType = undefined;
+      if (meetRegex.test(currValue.trim()) && !finalImageFile) {
+        messageType = "meeting";
+      }
+
       if (selectedConvo.type === "direct") {
         const participants = selectedConvo.participants;
         const otherUser = participants.filter((p) => p._id !== user._id)[0];
@@ -210,6 +219,7 @@ const MessageInput = ({ selectedConvo }: { selectedConvo: Conversation }) => {
           currValue,
           undefined,
           finalImageFile ?? undefined,
+          messageType
         );
         resetPickedImage();
         return;
@@ -221,6 +231,7 @@ const MessageInput = ({ selectedConvo }: { selectedConvo: Conversation }) => {
         undefined,
         undefined,
         finalImageFile ?? undefined,
+        messageType
       );
       resetPickedImage();
     } catch (error: any) {
@@ -259,8 +270,40 @@ const MessageInput = ({ selectedConvo }: { selectedConvo: Conversation }) => {
         onContinue={handleContinueGroupMessage}
         onLeaveGroup={handleLeaveGroup}
       />
+      <AppointmentDialog 
+        open={showAppointmentDialog} 
+        onOpenChange={setShowAppointmentDialog} 
+      />
+      
+      {replyingToMessage && (
+        <div className="px-3 py-2 bg-muted/20 border-t border-x border-border/40 rounded-t-xl flex items-center gap-3 animate-in slide-in-from-bottom-2 duration-200">
+          <div className="flex-1 min-w-0 flex items-center gap-2">
+            <div className="shrink-0 text-primary">
+              <Reply className="size-4" />
+            </div>
+            <div className="min-w-0 flex flex-col">
+              <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Đang trả lời</span>
+              <p className="text-xs text-muted-foreground truncate italic">
+                {replyingToMessage.content || (replyingToMessage.type === 'image' ? '[Hình ảnh]' : replyingToMessage.type === 'file' ? '[Tệp]' : '[Tin nhắn]')}
+              </p>
+            </div>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="size-6 hover:bg-muted" 
+            onClick={() => setReplyingToMessage(null)}
+          >
+            <CloseIcon className="size-3" />
+          </Button>
+        </div>
+      )}
+
       <div 
-        className="p-3 min-h-[56px] bg-background space-y-2"
+        className={cn(
+          "p-3 min-h-[56px] bg-background space-y-2 border-t",
+          replyingToMessage && "rounded-b-xl border-t-0 shadow-sm"
+        )}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
       >
@@ -338,6 +381,15 @@ const MessageInput = ({ selectedConvo }: { selectedConvo: Conversation }) => {
             onClick={sendLocation}
           >
             <MapPin className="size-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="hover:bg-primary/10 transition-smooth hidden sm:inline-flex"
+            onClick={() => setShowAppointmentDialog(true)}
+            title="Tạo lịch hẹn"
+          >
+            <CalendarPlus className="size-4" />
           </Button>
           <div className="flex-1 relative ml-1">
             <Input

@@ -187,7 +187,18 @@ const ChatWindowHeader = ({ chat }: { chat?: Conversation }) => {
 
             {/* Video call button – only for direct chats */}
             {chat.type === "direct" && (
-              <div className="ml-auto">
+              <div className="ml-auto flex items-center gap-1">
+                <Button
+                  id="btn-start-meet"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-primary hover:bg-primary/10"
+                  onClick={() => window.open("https://meet.google.com/new", "_blank")}
+                  title="Họp Google Meet"
+                >
+                  <span role="img" aria-label="call" className="text-base text-center w-full block leading-none">📞</span>
+                </Button>
+
                 <Button
                   id="btn-start-video-call"
                   variant="ghost"
@@ -203,6 +214,17 @@ const ChatWindowHeader = ({ chat }: { chat?: Conversation }) => {
 
             {chat.type === "group" && (
               <div className="ml-auto flex items-center gap-1">
+                <Button
+                  id="btn-start-meet-group"
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-primary hover:bg-primary/10"
+                  onClick={() => window.open("https://meet.google.com/new", "_blank")}
+                  title="Họp Google Meet"
+                >
+                  <span role="img" aria-label="call" className="text-base text-center w-full block leading-none">📞</span>
+                </Button>
+
                 <Button
                   id="btn-start-group-call"
                   variant="ghost"

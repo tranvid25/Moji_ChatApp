@@ -322,4 +322,19 @@
       transform: translateY(0) scale(1);
     }
   }
+
+  .highlight-message {
+    animation: highlightFade 2s ease-out;
+  }
+
+  @keyframes highlightFade {
+    0% {
+      background-color: hsla(var(--primary) / 0.2);
+      box-shadow: inset 0 0 0 2px hsla(var(--primary) / 0.5);
+    }
+    100% {
+      background-color: transparent;
+      box-shadow: inset 0 0 0 0 transparent;
+    }
+  }
 }

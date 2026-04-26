@@ -194,6 +194,16 @@ export const useSocketStore = create<SocketState>((set, get) => ({
         });
       }
     );
+
+    // ─── Appointments ──────────────────────────────────────────
+    socket.on("appointmentReminder", ({ title, startTime }) => {
+      import("sonner").then(({ toast }) => {
+        toast.info(`Nhắc nhở: Lịch hẹn sắp diễn ra`, {
+          description: `Lịch hẹn "${title}" bắt đầu lúc ${new Date(startTime).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}`,
+          duration: 10000,
+        });
+      });
+    });
   },
 
   disconnectSocket: () => {

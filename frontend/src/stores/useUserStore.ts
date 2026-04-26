@@ -11,10 +11,11 @@ export const useUserStore = create<UserState>(() => ({
   updateAvatarUrl: async (formData) => {
     try {
       const { user, setUser } = useAuthStore.getState();
-      const data = await userService.uploadAvatar(formData);
-      if (user) {
-        setUser({ ...user, avatarUrl: data.avatarUrl });
+      const res = await userService.uploadAvatar(formData);
+      if (user && res.data?.avatarUrl) {
+        setUser({ ...user, avatarUrl: res.data.avatarUrl });
         useChatStore.getState().fetchConversations();
+        toast.success(res.message || "Cập nhật ảnh đại diện thành công");
       }
     } catch (error) {
       console.error("Lỗi khi cập nhật ảnh đại diện", error);

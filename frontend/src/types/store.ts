@@ -43,9 +43,11 @@ export interface ChatState {
   convoLoading: boolean;
   messageLoading: boolean;
   loading:boolean;
+  replyingToMessage: Message | null;
   reset: () => void;
 
   setActiveConversation: (id: string | null) => void;
+  setReplyingToMessage: (message: Message | null) => void;
   fetchConversations: () => Promise<void>;
   fetchMessages: (ConversationId?: string) => Promise<void>;
   sendDirectMessage: (
@@ -53,6 +55,8 @@ export interface ChatState {
     content: string,
     imgUrl?: string,
     imageFile?: File,
+    type?: string,
+    replyToId?: string,
   ) => Promise<void>;
   sendGroupMessage: (
     conversationId: string,
@@ -60,6 +64,8 @@ export interface ChatState {
     imgUrl?: string,
     allowBlockedGroupMessage?: boolean,
     imageFile?: File,
+    type?: string,
+    replyToId?: string,
   ) => Promise<void>;
   //add message
   addMessage: (message: Message) => Promise<void>;
