@@ -11,8 +11,8 @@ import type { User } from "@/types/user";
 import { useFriendStore } from "@/stores/useFriendStore";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
-import SeachForm from "../AddFriendModal/SeachForm";
-import SendFriendRequestForm from "../AddFriendModal/SendFriendRequestForm";
+import SeachForm from "../addFriendModal/SeachForm";
+import SendFriendRequestForm from "../addFriendModal/SendFriendRequestForm";
 export interface IFormValues {
   username: string;
   message?: string;
