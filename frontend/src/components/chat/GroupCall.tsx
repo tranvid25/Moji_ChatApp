@@ -8,11 +8,9 @@
 import { useEffect, useState } from "react";
 import { RoomEvent, Participant } from "livekit-client";
 import { 
-  BarChart3, 
   Mic, 
   MicOff, 
   Video, 
-  VideoOff, 
   PhoneOff, 
   Users
 } from "lucide-react";
@@ -46,13 +44,19 @@ const GroupCall = () => {
 
     room.on(RoomEvent.ParticipantConnected, updateParticipants);
     room.on(RoomEvent.ParticipantDisconnected, updateParticipants);
-    
+    room.on(RoomEvent.TrackSubscribed, updateParticipants);
+    room.on(RoomEvent.TrackUnsubscribed, updateParticipants);
+    room.on(RoomEvent.ActiveSpeakersChanged, updateParticipants);
+
     // Khởi tạo danh sách ban đầu
     setParticipants(Array.from(room.remoteParticipants.values()));
 
     return () => {
       room.off(RoomEvent.ParticipantConnected, updateParticipants);
       room.off(RoomEvent.ParticipantDisconnected, updateParticipants);
+      room.off(RoomEvent.TrackSubscribed, updateParticipants);
+      room.off(RoomEvent.TrackUnsubscribed, updateParticipants);
+      room.off(RoomEvent.ActiveSpeakersChanged, updateParticipants);
     };
   }, [room]);
 

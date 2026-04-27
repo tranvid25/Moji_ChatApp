@@ -18,6 +18,11 @@ const io = new Server({
 io.use(socketAuthMiddleware);
 const onlineUsers = new Map();
 
+// ─── Group Call Room State ────────────────────────────────────────────────────
+// groupCallRooms: Map<conversationId, Set<userId>>
+// Tracks who is currently in a live group call room.
+const groupCallRooms = new Map();
+
 const emitOnlineUsers = async () => {
   const ids = Array.from(onlineUsers.keys());
   if (ids.length === 0) {
@@ -169,12 +174,35 @@ io.on("connection", async (socket) => {
   socket.on("join-group-call", ({ conversationId }) => {
     if (!conversationId) return;
 
+    // Actually join the socket.io room so the user receives events
+    socket.join(conversationId);
+
+    // Track in room state
+    if (!groupCallRooms.has(conversationId)) {
+      groupCallRooms.set(conversationId, new Set());
+    }
+    groupCallRooms.get(conversationId).add(userId);
+
+    // Notify others already in the room
     socket.to(conversationId).emit("participant-joined-group-call", {
       userId,
       userName: user.displayName || user.username,
       conversationId,
     });
-    console.log(`[GroupCall] ${userId} joined room ${conversationId}`);
+
+    // Send the new user a list of existing participants
+    const existingParticipants = Array.from(
+      groupCallRooms.get(conversationId)
+    ).filter((id) => id !== userId);
+
+    socket.emit("group-call-participants", {
+      conversationId,
+      participants: existingParticipants,
+    });
+
+    console.log(
+      `[GroupCall] ${userId} joined room ${conversationId}. Room size: ${groupCallRooms.get(conversationId).size}`
+    );
   });
 
   /**
@@ -184,11 +212,22 @@ io.on("connection", async (socket) => {
   socket.on("leave-group-call", ({ conversationId }) => {
     if (!conversationId) return;
 
-    socket.to(conversationId).emit("participant-left-group-call", {
-      userId,
-      conversationId,
-    });
+    _leaveGroupCallRoom(socket, userId, conversationId);
     console.log(`[GroupCall] ${userId} left room ${conversationId}`);
+  });
+
+  /**
+   * Caller / host ends the call for everyone.
+   * Payload: { conversationId }
+   */
+  socket.on("end-group-call", ({ conversationId }) => {
+    if (!conversationId) return;
+
+    io.to(conversationId).emit("group-call-ended", { conversationId });
+
+    // Clean up room state
+    groupCallRooms.delete(conversationId);
+    console.log(`[GroupCall] Room ${conversationId} ended by ${userId}`);
   });
 
   /**
@@ -207,7 +246,6 @@ io.on("connection", async (socket) => {
 
   // ─── Disconnect ──────────────────────────────────────────────────────────
 
-
   socket.on("disconnect", async () => {
     const sockets = onlineUsers.get(userId);
     if (sockets) {
@@ -219,9 +257,37 @@ io.on("connection", async (socket) => {
       }
     }
     await emitOnlineUsers();
+
+    // Auto-leave any group call rooms this socket was part of
+    for (const [conversationId, members] of groupCallRooms.entries()) {
+      if (members.has(userId)) {
+        _leaveGroupCallRoom(socket, userId, conversationId);
+      }
+    }
+
     console.log(`socket disconnected: ${socket.id}`);
   });
 });
+
+// ─── Helper ───────────────────────────────────────────────────────────────────
+
+function _leaveGroupCallRoom(socket, userId, conversationId) {
+  socket.leave(conversationId);
+
+  const room = groupCallRooms.get(conversationId);
+  if (room) {
+    room.delete(userId);
+    if (room.size === 0) {
+      // Last person left – clean up
+      groupCallRooms.delete(conversationId);
+    }
+  }
+
+  socket.to(conversationId).emit("participant-left-group-call", {
+    userId,
+    conversationId,
+  });
+}
 
 export { io };
 

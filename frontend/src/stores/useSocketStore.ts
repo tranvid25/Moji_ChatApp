@@ -195,6 +195,44 @@ export const useSocketStore = create<SocketState>((set, get) => ({
       }
     );
 
+    /**
+     * Fired on the CALLER when an invitee rejects the group call.
+     * Payload: { userId, userName, conversationId }
+     */
+    socket.on(
+      "group-call-rejected",
+      ({ userName }: { userId: string; userName: string; conversationId: string }) => {
+        import("sonner").then(({ toast }) => {
+          toast.info(`${userName} đã từ chối tham gia cuộc gọi nhóm`);
+        });
+      }
+    );
+
+    /**
+     * Fired when the host ends the call for everyone.
+     * Payload: { conversationId }
+     */
+    socket.on("group-call-ended", () => {
+      const groupCallStore = useGroupCallStore.getState();
+      if (groupCallStore.status !== "idle") {
+        groupCallStore.endCall();
+      }
+    });
+
+    /**
+     * Fired back to the joiner with current participants list.
+     * Payload: { conversationId, participants: string[] }
+     */
+    socket.on(
+      "group-call-participants",
+      ({ conversationId, participants }: { conversationId: string; participants: string[] }) => {
+        console.log(
+          `[GroupCall] Existing participants in ${conversationId}:`,
+          participants
+        );
+      }
+    );
+
     // ─── Appointments ──────────────────────────────────────────
     socket.on("appointmentReminder", ({ title, startTime }) => {
       import("sonner").then(({ toast }) => {

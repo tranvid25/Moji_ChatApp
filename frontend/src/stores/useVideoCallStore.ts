@@ -132,7 +132,8 @@ export const useVideoCallStore = create<VideoCallState>((set, get) => ({
   endCall: () => {
     const { localStream, peerConnection } = get();
 
-    // Stop all local media tracks
+    // Stop all local media tracks AND immediately null them out
+    // so the OS releases the camera/mic device handle right away.
     if (localStream) {
       localStream.getTracks().forEach((track) => track.stop());
     }
@@ -145,7 +146,8 @@ export const useVideoCallStore = create<VideoCallState>((set, get) => ({
       peerConnection.close();
     }
 
-    set({ status: "ended" });
+    // Null out streams immediately — don't wait for the reset timer
+    set({ status: "ended", localStream: null, remoteStream: null, peerConnection: null });
 
     // Auto-reset after animation
     setTimeout(() => {

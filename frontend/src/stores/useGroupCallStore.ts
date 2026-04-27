@@ -24,6 +24,7 @@ export interface GroupCallState {
   conversationId: string | null;
   groupName: string | null;
   isIncoming: boolean;
+  isInitiator: boolean;   // true = this user started the call
   callerName: string | null;
   callerAvatar: string | null;
   callerId: string | null;
@@ -75,6 +76,7 @@ const INITIAL: Omit<
   conversationId: null,
   groupName: null,
   isIncoming: false,
+  isInitiator: false,
   callerName: null,
   callerAvatar: null,
   callerId: null,
@@ -99,6 +101,7 @@ export const useGroupCallStore = create<GroupCallState>((set, get) => ({
       conversationId,
       groupName,
       isIncoming: false,
+      isInitiator: true,
       callerName: null,
       callerAvatar: null,
       callerId: null,
@@ -110,6 +113,7 @@ export const useGroupCallStore = create<GroupCallState>((set, get) => ({
       conversationId,
       groupName,
       isIncoming: true,
+      isInitiator: false,
       callerName,
       callerAvatar: callerAvatar ?? null,
       callerId,
