@@ -109,7 +109,7 @@ const GroupCall = () => {
       )}
 
       {/* --- Overlay: Joining / Calling --- */}
-      {(status === "joining" || status === "calling") && !isIncoming && (
+      {(status === "joining" || status === "calling") && (
         <div className="relative z-10 flex flex-col items-center gap-6 text-white animate-in fade-in duration-300">
           <div className="w-20 h-20 rounded-full border-4 border-primary/30 border-t-primary animate-spin" />
           <div className="text-center">
