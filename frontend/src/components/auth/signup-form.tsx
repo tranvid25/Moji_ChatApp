@@ -46,7 +46,7 @@ export function SignupForm({
       );
 
       if (response) {
-        toast.success(response?.message || "Đăng ký thành công");
+        toast.success("Đăng ký thành công");
         navigate("/signin");
       }
     } catch (error: any) {
