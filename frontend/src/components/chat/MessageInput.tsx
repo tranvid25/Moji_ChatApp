@@ -14,6 +14,7 @@ import { compressImageToWebP } from "@/lib/imageUtils";
 import AppointmentDialog from "./AppointmentDialog";
 import { Reply, X as CloseIcon } from "lucide-react";
 import ActionMenu from "./ActionMenu";
+import GifPicker from "./GifPicker";
 
 const MessageInput = ({ selectedConvo }: { selectedConvo: Conversation }) => {
   const { user } = useAuthStore();
@@ -257,6 +258,21 @@ const MessageInput = ({ selectedConvo }: { selectedConvo: Conversation }) => {
     }
   };
 
+  const handleSendGif = async (gifUrl: string) => {
+    try {
+      if (selectedConvo.type === "direct") {
+        const otherUser = selectedConvo.participants.find((p) => p._id !== user._id);
+        if (otherUser) {
+          await sendDirectMessage(otherUser._id, gifUrl, undefined, undefined, "gif");
+        }
+      } else {
+        await sendGroupMessage(selectedConvo._id, gifUrl, undefined, undefined, undefined, "gif");
+      }
+    } catch (err) {
+      toast.error("Không thể gửi GIF");
+    }
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -404,6 +420,9 @@ const MessageInput = ({ selectedConvo }: { selectedConvo: Conversation }) => {
                   />
                 </div>
               </Button>
+              <div className="ml-1">
+                <GifPicker onSelect={handleSendGif} />
+              </div>
             </div>
           </div>
           <Button

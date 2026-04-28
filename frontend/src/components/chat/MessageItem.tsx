@@ -55,7 +55,7 @@ const MessageItem = ({
       new Date(prev?.createdAt || 0).getTime() >
       1000 * 60 * 5;
   const isGroupBreak = isShowTime || message.senderId !== prev?.senderId;
-  const hasTextBubble = Boolean(message.content?.trim()) && message.type !== "location" && message.type !== "meeting" && message.type !== "code_action" && message.type !== "document" && message.type !== "note";
+  const hasTextBubble = Boolean(message.content?.trim()) && message.type !== "location" && message.type !== "meeting" && message.type !== "code_action" && message.type !== "document" && message.type !== "note" && message.type !== "gif";
   const hasImage = Boolean(message.imgUrl) && message.type !== "file" && message.type !== "audio";
   const isFile = message.type === "file" || Boolean(message.fileUrl && message.type !== "audio");
   const isAudio = message.type === "audio";
@@ -64,6 +64,7 @@ const MessageItem = ({
   const isCodeAction = message.type === "code_action";
   const isDocument = message.type === "document";
   const isNote = message.type === "note";
+  const isGif = message.type === "gif";
   
   const getFileIcon = (fileName?: string | null) => {
     if (!fileName) return <FileIcon className="size-5" />;
@@ -159,6 +160,22 @@ const MessageItem = ({
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {isGif && message.content && (
+            <div
+              className={cn(
+                "w-fit max-w-full overflow-hidden rounded-2xl relative bg-transparent",
+                message.isSending && "opacity-70",
+              )}
+            >
+              <img
+                src={message.content}
+                alt="gif-message"
+                className="max-h-[280px] w-auto max-w-[280px] object-contain sm:max-w-[340px] rounded-2xl"
+                loading="lazy"
+              />
             </div>
           )}
 

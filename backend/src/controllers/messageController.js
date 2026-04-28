@@ -49,6 +49,10 @@ export const sendDirectMessage = async (req, res) => {
     let fileName = null;
     let fileSize = null;
     let msgType = req.body.type || (finalImgUrl ? "image" : "text");
+    
+    if (msgType === "gif" || msgType === "sticker") {
+      if (!finalImgUrl && content) finalImgUrl = content;
+    }
 
     if (file?.buffer) {
       fileSize = file.size; // Or file.buffer.length
@@ -118,28 +122,27 @@ export const sendDirectMessage = async (req, res) => {
     if (message.replyTo) {
       await message.populate("replyTo");
     }
-    updateConversationAfterCreateMessage(conversation, senderId, message);
+    await updateConversationAfterCreateMessage(conversation, senderId, message);
     await conversation.save();
     emitNewMessage(io, conversation, message);
     return res.status(200).json({
       message,
     });
   } catch (error) {
-    console.log("Lỗi khi gửi tin nhắn trực tiếp", error);
-    return res.status(500).json({
-      message: "Lỗi hệ thống",
-    });
+    console.error("Lỗi khi gửi tin nhắn trực tiếp", error);
+    return res.status(500).json({ message: "Lỗi hệ thống", error: error.message, stack: error.stack });
   }
 };
 export const sendGroupMessage = async (req, res) => {
   try {
-    const { conversationId, content, replyTo, metadata, isImportant } = req.body;
+    const { conversationId, content, replyTo, metadata, isImportant, type, imgUrl } = req.body;
     const senderId = req.user._id;
     const conversation = req.conversation;
     const file = req.file;
 
     let parsedMetadata = null;
     let parsedIsImportant = false;
+
     try {
       if (metadata) parsedMetadata = typeof metadata === 'string' ? JSON.parse(metadata) : metadata;
       if (isImportant) parsedIsImportant = typeof isImportant === 'string' ? isImportant === 'true' : isImportant;
@@ -153,32 +156,33 @@ export const sendGroupMessage = async (req, res) => {
         .json({ message: "Nội dung tin nhắn không được để trống" });
     }
 
-    let finalImgUrl = req.body.imgUrl || null;
+    let finalImgUrl = null;
     let fileUrl = null;
     let fileName = null;
     let fileSize = null;
-    let msgType = req.body.type || (finalImgUrl ? "image" : "text");
+    let msgType = type || "text";
 
+    if (msgType === "gif" || msgType === "sticker") {
+      finalImgUrl = imgUrl;
+    }
     if (file?.buffer) {
       fileSize = file.size;
+
       if (file.mimetype.startsWith("image/")) {
         const uploadResult = await uploadImageFromBuffer(file.buffer, {
           folder: "moji_chat/messages",
           transformation: [{ width: 1200, height: 1200, crop: "limit" }],
         });
+
         finalImgUrl = uploadResult?.secure_url;
-        if (!req.body.type) msgType = "image";
+        msgType = "image";
+
       } else {
         const result = saveFileLocally(file.buffer, file.originalname);
         fileUrl = result.fileUrl;
         fileName = result.fileName;
-        if (!req.body.type) {
-          if (file.mimetype.startsWith("audio/")) {
-              msgType = "audio";
-          } else {
-              msgType = "file";
-          }
-        }
+
+        msgType = file.mimetype.startsWith("audio/") ? "audio" : "file";
       }
     }
 
@@ -199,12 +203,19 @@ export const sendGroupMessage = async (req, res) => {
     if (message.replyTo) {
       await message.populate("replyTo");
     }
-    updateConversationAfterCreateMessage(conversation, senderId, message);
+
+    await updateConversationAfterCreateMessage(conversation, senderId, message);
     await conversation.save();
+
     emitNewMessage(io, conversation, message);
+
     return res.status(200).json({ message });
+
   } catch (error) {
-    console.log("Lỗi khi gửi tin nhắn nhóm", error);
-    return res.status(500).json({ message: "Lỗi hệ thống" });
+    console.error("🔥 Lỗi khi gửi tin nhắn nhóm:", error);
+    return res.status(500).json({
+      message: "Lỗi hệ thống",
+      error: error.message
+    });
   }
 };
