@@ -37,8 +37,13 @@ const checkRateLimit = async (key, maxReqs, windowSec) => {
  */
 const createRateLimiter = (type, maxReqs, windowSec, errorCode, errorMessage) => {
   return async (req, res, next) => {
+    console.log(`[RateLimit] Checking request: type=${req.body.type}, target=${type}, path=${req.path}`);
+    
     // Bỏ qua nếu không phải loại tin nhắn cần giới hạn
-    if (req.body.type !== type) return next();
+    if (req.body.type !== type) {
+      console.log(`[RateLimit] Skipping: ${req.body.type} is not ${type}`);
+      return next();
+    }
 
     const userId = req.user
       ? (req.user._id || req.user.id).toString()
@@ -48,6 +53,7 @@ const createRateLimiter = (type, maxReqs, windowSec, errorCode, errorMessage) =>
 
     try {
       const { success, remaining, ttl } = await checkRateLimit(key, maxReqs, windowSec);
+      console.log(`[RateLimit] Result for ${type}: success=${success}, remaining=${remaining}`);
 
       if (!success) {
         res.setHeader("Retry-After", ttl > 0 ? ttl : windowSec);
