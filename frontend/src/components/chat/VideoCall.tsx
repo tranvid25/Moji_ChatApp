@@ -209,7 +209,7 @@ const VideoCall = () => {
             ref={remoteVideoRef}
             autoPlay
             playsInline
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover "
           />
 
           {/* Fallback when remote video not yet received */}
@@ -249,7 +249,7 @@ const VideoCall = () => {
               autoPlay
               playsInline
               muted
-              className={cn("w-full h-full object-cover", isCameraOff && "hidden")}
+              className={cn("w-full h-full object-cover scale-x-[-1]", isCameraOff && "hidden")}
             />
             {isCameraOff && (
               <div className="w-full h-full flex items-center justify-center bg-gray-700">
