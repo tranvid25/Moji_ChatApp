@@ -12,7 +12,8 @@ import {
   MicOff, 
   Video, 
   PhoneOff, 
-  Users
+  Users,
+  VideoOff
 } from "lucide-react";
 import { useGroupCallStore } from "@/stores/useGroupCallStore";
 import { useGroupCall } from "@/hooks/useGroupCall";

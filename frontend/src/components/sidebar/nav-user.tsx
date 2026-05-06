@@ -40,7 +40,7 @@ export function NavUser({ user }: { user: User }) {
       <SidebarMenu>
         <SidebarMenuItem>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild className="w-full cursor-pointer">
+            <DropdownMenuTrigger className="w-full cursor-pointer">
               <SidebarMenuButton
                 size="lg"
                 className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-primary-foreground cursor-pointer"

@@ -21,7 +21,7 @@ export default function GifPicker({ onSelect }: GifPickerProps) {
   const [hasMore, setHasMore] = useState(true);
   const [activeTab, setActiveTab] = useState<"gif" | "sticker">("gif");
   
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const cacheRef = useRef<Record<string, any[]>>({});
 
@@ -154,7 +154,7 @@ export default function GifPicker({ onSelect }: GifPickerProps) {
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger asChild>
+      <PopoverTrigger>
         <Button variant="ghost" size="icon" className="size-8 hover:bg-primary/10 transition-smooth">
           <Film className="size-4" />
         </Button>
