@@ -112,7 +112,7 @@ const ParticipantTile = ({ participant, isSmall = false }: ParticipantTileProps)
         playsInline
         muted={isLocal} // không tự nghe audio của mình
         className={cn(
-          "w-full h-full object-cover",
+          "w-full h-full object-cover scale-x-[-1]",
           !hasVideo && "hidden",
         )}
       />
