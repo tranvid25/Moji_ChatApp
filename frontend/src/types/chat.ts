@@ -47,7 +47,11 @@ export interface Message {
   imgUrl?: string | null;
   fileUrl?: string | null;
   fileName?: string | null;
-  type?: "text" | "image" | "video" | "file" | "audio" | "location" | "meeting" | "code_action" | "document" | "note" | "gif";
+  type?: "text" | "image" | "video" | "file" | "audio" | "location" | "meeting" | "code_action" | "document" | "note" | "gif" | "call_history";
+  callInfo?: {
+    status: "ended" | "missed" | "rejected";
+    duration: number;
+  };
   metadata?: {
     toolName?: string;
     link?: string;

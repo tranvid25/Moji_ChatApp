@@ -93,4 +93,18 @@ export const chatService = {
     );
     return res.data.conversation;
   },
+  async saveCallHistory(
+    conversationId: string | undefined,
+    receiverId: string | undefined,
+    status: string,
+    duration: number
+  ) {
+    const res = await api.post("/messages/call-history", {
+      conversationId,
+      receiverId,
+      status,
+      duration
+    });
+    return res.data.message;
+  }
 };

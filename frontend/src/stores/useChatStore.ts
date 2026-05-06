@@ -284,6 +284,15 @@ export const useChatStore = create<ChatState>()(
           throw error;
         }
       },
+      saveCallHistory: async (conversationId, receiverId, status, duration) => {
+        try {
+          // Chỉ gọi API, server sẽ tự emit tin nhắn về qua Socket và `addMessage` sẽ tự nhận
+          await chatService.saveCallHistory(conversationId, receiverId, status, duration);
+        } catch (error) {
+          console.error("Lỗi xảy ra khi lưu lịch sử cuộc gọi", error);
+          throw error;
+        }
+      },
       addMessage: async (message) => {
         try {
           const { user } = useAuthStore.getState();

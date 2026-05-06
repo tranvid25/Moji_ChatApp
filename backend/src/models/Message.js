@@ -36,8 +36,12 @@ const messageSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["text", "image", "video", "file", "audio", "location", "meeting", "code_action", "document", "note", "gif"],
+      enum: ["text", "image", "video", "file", "audio", "location", "meeting", "code_action", "document", "note", "gif", "call_history"],
       default: "text",
+    },
+    callInfo: {
+      status: { type: String, enum: ["ended", "missed", "rejected"] },
+      duration: { type: Number, default: 0 }
     },
     metadata: {
       toolName: { type: String, default: null },

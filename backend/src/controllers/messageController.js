@@ -219,3 +219,55 @@ export const sendGroupMessage = async (req, res) => {
     });
   }
 };
+
+export const saveCallHistoryMessage = async (req, res) => {
+  try {
+    const { conversationId, receiverId, status, duration } = req.body;
+    const senderId = req.user._id;
+
+    let conversation;
+    if (conversationId) {
+      conversation = await Conversation.findById(conversationId);
+    } else if (receiverId) {
+      conversation = await Conversation.findOne({
+        type: "direct",
+        "participants.userId": { $all: [senderId, receiverId] },
+      });
+      if (!conversation) {
+        conversation = await Conversation.create({
+          type: "direct",
+          participants: [
+            { userId: senderId, joinedAt: new Date() },
+            { userId: receiverId, joinedAt: new Date() },
+          ],
+          lastMessageAt: new Date(),
+          unreadCount: new Map(),
+        });
+      }
+    }
+
+    if (!conversation) {
+      return res.status(404).json({ message: "Không tìm thấy cuộc hội thoại" });
+    }
+
+    const message = await Message.create({
+      conversationId: conversation._id,
+      senderId,
+      type: "call_history",
+      callInfo: {
+        status,
+        duration: duration || 0
+      }
+    });
+
+    await updateConversationAfterCreateMessage(conversation, senderId, message);
+    await conversation.save();
+
+    emitNewMessage(io, conversation, message);
+
+    return res.status(200).json({ message });
+  } catch (error) {
+    console.error("Lỗi khi lưu lịch sử cuộc gọi:", error);
+    return res.status(500).json({ message: "Lỗi hệ thống" });
+  }
+};

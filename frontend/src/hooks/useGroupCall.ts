@@ -18,6 +18,7 @@ import type { RoomOptions } from "livekit-client";
 import { useGroupCallStore } from "@/stores/useGroupCallStore";
 import { useSocketStore } from "@/stores/useSocketStore";
 import { groupCallService } from "@/services/groupCallService";
+import { useChatStore } from "@/stores/useChatStore";
 
 // ─── LiveKit Room defaults ────────────────────────────────────────────────────
 
@@ -191,10 +192,9 @@ export function useGroupCall() {
 
     if (conversationId) {
       if (isInitiator) {
-        // Initiator: end the call for ALL participants
         socket?.emit("end-group-call", { conversationId });
+        useChatStore.getState().saveCallHistory(conversationId, undefined, "ended", 0).catch(console.error);
       } else {
-        // Regular participant: just leave, others stay
         socket?.emit("leave-group-call", { conversationId });
       }
     }

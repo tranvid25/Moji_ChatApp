@@ -125,8 +125,9 @@ const MessageInput = ({ selectedConvo }: { selectedConvo: Conversation }) => {
           } else {
             await sendGroupMessage(selectedConvo._id, coordsStr, undefined, undefined, undefined, "location");
           }
-        } catch (err) {
-          toast.error("Lỗi khi gửi vị trí");
+        } catch (err: any) {
+          const apiMessage = err?.response?.data?.message;
+          toast.error(apiMessage || "Lỗi khi gửi vị trí");
         }
       },
       () => toast.error("Không thể lấy vị trí")
@@ -268,8 +269,9 @@ const MessageInput = ({ selectedConvo }: { selectedConvo: Conversation }) => {
       } else {
         await sendGroupMessage(selectedConvo._id, gifUrl, undefined, undefined, undefined, "gif");
       }
-    } catch (err) {
-      toast.error("Không thể gửi GIF");
+    } catch (err: any) {
+      const apiMessage = err?.response?.data?.message;
+      toast.error(apiMessage || "Không thể gửi GIF");
     }
   };
 

@@ -15,6 +15,7 @@
 import { useCallback } from "react";
 import { useSocketStore } from "@/stores/useSocketStore";
 import { useVideoCallStore } from "@/stores/useVideoCallStore";
+import { useChatStore } from "@/stores/useChatStore";
 
 // Google STUN servers – no authentication required
 const ICE_SERVERS: RTCIceServer[] = [
@@ -160,17 +161,27 @@ export function useWebRTC() {
 
     s?.emit("end-call", { to: rid, conversationId: cid, reason: "rejected" });
     useVideoCallStore.getState().endCall();
+    useChatStore.getState().saveCallHistory(cid || undefined, rid || undefined, "rejected", 0).catch(console.error);
   }, []);
 
   // ─── 6. Hang Up ────────────────────────────────────────────────────────────
 
   const hangUp = useCallback(() => {
-    const { remoteUserId: rid, conversationId: cid } =
+    const { remoteUserId: rid, conversationId: cid, status, callStartedAt } =
       useVideoCallStore.getState();
     const { socket: s } = useSocketStore.getState();
 
-    s?.emit("end-call", { to: rid, conversationId: cid, reason: "ended" });
+    let reason = "ended";
+    let duration = 0;
+    if (status === "calling" || status === "ringing") {
+       reason = "missed";
+    } else if (status === "in-call" && callStartedAt) {
+       duration = Math.floor((Date.now() - callStartedAt) / 1000);
+    }
+
+    s?.emit("end-call", { to: rid, conversationId: cid, reason });
     useVideoCallStore.getState().endCall();
+    useChatStore.getState().saveCallHistory(cid || undefined, rid || undefined, reason, duration).catch(console.error);
   }, []);
 
   return {

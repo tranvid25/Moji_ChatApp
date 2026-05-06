@@ -55,7 +55,7 @@ const MessageItem = ({
       new Date(prev?.createdAt || 0).getTime() >
       1000 * 60 * 5;
   const isGroupBreak = isShowTime || message.senderId !== prev?.senderId;
-  const hasTextBubble = Boolean(message.content?.trim()) && message.type !== "location" && message.type !== "meeting" && message.type !== "code_action" && message.type !== "document" && message.type !== "note" && message.type !== "gif";
+  const hasTextBubble = Boolean(message.content?.trim()) && message.type !== "location" && message.type !== "meeting" && message.type !== "code_action" && message.type !== "document" && message.type !== "note" && message.type !== "gif" && message.type !== "call_history";
   const hasImage = Boolean(message.imgUrl) && message.type !== "file" && message.type !== "audio";
   const isFile = message.type === "file" || Boolean(message.fileUrl && message.type !== "audio");
   const isAudio = message.type === "audio";
@@ -65,6 +65,7 @@ const MessageItem = ({
   const isDocument = message.type === "document";
   const isNote = message.type === "note";
   const isGif = message.type === "gif";
+  const isCallHistory = message.type === "call_history";
   
   const getFileIcon = (fileName?: string | null) => {
     if (!fileName) return <FileIcon className="size-5" />;
@@ -160,22 +161,6 @@ const MessageItem = ({
                   </div>
                 </div>
               )}
-            </div>
-          )}
-
-          {isGif && message.content && (
-            <div
-              className={cn(
-                "w-fit max-w-full overflow-hidden rounded-2xl relative bg-transparent",
-                message.isSending && "opacity-70",
-              )}
-            >
-              <img
-                src={message.content}
-                alt="gif-message"
-                className="max-h-[280px] w-auto max-w-[280px] object-contain sm:max-w-[340px] rounded-2xl"
-                loading="lazy"
-              />
             </div>
           )}
 
@@ -352,6 +337,37 @@ const MessageItem = ({
               <p className={cn("whitespace-pre-wrap wrap-break-word text-sm leading-relaxed", message.isImportant ? "text-amber-900 dark:text-amber-100" : "text-foreground")}>
                 {message.content}
               </p>
+            </Card>
+          )}
+
+          {isCallHistory && message.callInfo && (
+            <Card className={cn(
+              "rounded-2xl p-3 border shadow-sm flex items-center gap-3 w-fit",
+              message.callInfo.status === "missed" ? "bg-destructive/10 border-destructive/20 text-destructive" :
+              message.callInfo.status === "rejected" ? "bg-muted border-border/50 text-muted-foreground" :
+              "bg-primary/10 border-primary/20 text-primary"
+            )}>
+              <div className={cn(
+                "size-10 rounded-full flex items-center justify-center shrink-0",
+                message.callInfo.status === "missed" ? "bg-destructive/20" :
+                message.callInfo.status === "rejected" ? "bg-muted-foreground/20" :
+                "bg-primary/20"
+              )}>
+                <Video className="size-5" />
+              </div>
+              <div className="flex flex-col">
+                <span className="font-medium text-sm">
+                  {message.callInfo.status === "missed" ? "Cuộc gọi video nhỡ" :
+                   message.callInfo.status === "rejected" ? "Đã từ chối cuộc gọi" :
+                   "Cuộc gọi video"}
+                </span>
+                {message.callInfo.status === "ended" && message.callInfo.duration !== undefined && (
+                  <span className="text-xs opacity-80 mt-0.5">
+                    {Math.floor(message.callInfo.duration / 60).toString().padStart(2, '0')}:
+                    {(message.callInfo.duration % 60).toString().padStart(2, '0')}
+                  </span>
+                )}
+              </div>
             </Card>
           )}
 

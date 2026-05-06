@@ -71,6 +71,12 @@ export interface ChatState {
     metadata?: { toolName?: string; link?: string },
     isImportant?: boolean
   ) => Promise<void>;
+  saveCallHistory: (
+    conversationId: string | undefined,
+    receiverId: string | undefined,
+    status: string,
+    duration: number
+  ) => Promise<void>;
   //add message
   addMessage: (message: Message) => Promise<void>;
 
